@@ -9,7 +9,7 @@ O Lunna Backend é um serviço de API construído com Node.js, Express e Prisma 
 ## 🚀 Tecnologias
 
 - **Node.js** - Ambiente de execução JavaScript
-- **Express** - Framework web
+- **Fastify** - Framework web
 - **Prisma** - ORM para banco de dados
 - **MongoDB** - Banco de dados NoSQL
 - **JWT** - Autenticação por tokens
