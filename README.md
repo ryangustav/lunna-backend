@@ -30,9 +30,11 @@ lunna-backend/
 │   ├── services/           # Serviços de negócio
 │   ├── utils/              # Funções utilitárias
 │   ├── validators/         # Esquemas de validação
+│   ├── environments/       # Variáveis de ambiente
+│   │   └── .env-example    # Modelo para variáveis de ambiente
 │   └── app.ts              # Inicialização da aplicação
-├── .env.example            # Variáveis de ambiente de exemplo
-└── package.json            # Dependências e scripts
+├── package.json            # Dependências e scripts
+└── tsconfig.json           # Configuração do TypeScript
 ```
 
 ## 🛠️ Instalação
