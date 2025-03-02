@@ -1,0 +1,224 @@
+import { PrismaClient } from '@prisma/client';
+import * as dotenv from 'dotenv';
+import { Stripe } from 'stripe';
+import Fastify, { FastifyInstance } from 'fastify';
+import { StripePaymentGateway } from './infrastructure/services/stripe-payment.gateway';
+import { DiscordNotificationService } from './infrastructure/services/discord-notification.service';
+import { PrismaVipRepository } from './infrastructure/repositories/prisma-vip.repository';
+import { PrismaTransactionRepository } from './infrastructure/repositories/prisma-transaction.repository';
+import { LoggerService } from './infrastructure/services/logger.service';
+import { ActivateVipUseCase } from './application/usecases/vip/activate-vip.usecase';
+import { CheckExpiringVipsUseCase } from './application/usecases/vip/check-expiring-vips.usecase';
+import { VipScheduler } from './infrastructure/schedule/vip.schedule';
+import chalk from 'chalk';
+import { PaymentConfig } from './config/payment.config';
+import { TransactionController } from './infrastructure/controllers/transaction.controller';
+import { VipController } from './infrastructure/controllers/vip.controller';
+import cors from '@fastify/cors';
+import { DiscordOAuthController } from './infrastructure/controllers/discord.controller';
+import securityPlugin from './infrastructure/plugins/security.plugin';
+import authPlugin from './infrastructure/plugins/auth.plugin';
+
+/**
+ * Creates and configures a Fastify server instance.
+ *
+ * This function initializes environment variables, sets up Fastify with
+ * necessary plugins and services, and configures routes and graceful shutdown
+ * mechanisms. It integrates with Prisma for database access, Stripe for payment
+ * processing, and Discord for notifications. It also sets up VIP activation and
+ * expiration checking use cases, along with a scheduler for periodic tasks.
+ *
+ * @returns {Promise<FastifyInstance>} A promise that resolves to a configured Fastify instance.
+ */
+async function createServer(): Promise<FastifyInstance> {
+
+  dotenv.config();
+
+
+  const app = Fastify({
+    logger: true,
+    trustProxy: true
+  });
+
+
+  app.register(LoggerService);
+
+
+  await app.register(securityPlugin, {
+    rateLimiting: {
+      enabled: true,
+      max: 100,
+      timeWindow: '1 minute'
+    },
+    helmet: {
+      enabled: true,
+      contentSecurityPolicy: true
+    },
+    botProtection: {
+      enabled: true,
+      blockSuspiciousBots: process.env.NODE_ENV === 'production'
+    },
+    redisUrl: process.env.REDIS_URL
+  });
+  
+  await app.register(cors, {
+    origin: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
+    credentials: true,
+  });
+
+  await app.register(authPlugin, {
+    secret: process.env.JWT_SECRET!,
+    skipRoutes: ['/auth/login', '/transactions/cancel', '/transactions/success', '/auth/register', '/vip/tiers', '/auth/discord', '/auth/discord/callback', '/auth/logout']
+  });
+
+
+
+  const prisma = new PrismaClient({
+    log: ['error', 'warn']
+  });
+
+
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: '2025-01-27.acacia'
+  });
+
+
+  const paymentGateway = new StripePaymentGateway(stripe, {
+    stripeSecretKey: PaymentConfig.stripeSecretKey,
+    stripeWebhookSecret: PaymentConfig.stripeWebhookSecret,
+    currency: PaymentConfig.currency,
+    successUrl: PaymentConfig.successUrl,
+    cancelUrl: PaymentConfig.cancelUrl,
+    mercadoPagoSecretKey: PaymentConfig.mercadoPagoSecretKey
+  });
+  
+  const notificationService = new DiscordNotificationService(
+    process.env.DISCORD_WEBHOOK_URL!
+  );
+
+
+  const vipRepository = new PrismaVipRepository(prisma);
+  const transactionRepository = new PrismaTransactionRepository(prisma);
+
+
+  const activateVipUseCase = new ActivateVipUseCase(
+    vipRepository,
+    transactionRepository,
+    notificationService
+  );
+
+  const DiscordController = new DiscordOAuthController();
+
+  const transactionController = new TransactionController(
+    transactionRepository,
+    vipRepository,
+    paymentGateway
+  );
+
+  const vipController = new VipController(
+    activateVipUseCase,
+    vipRepository,
+    paymentGateway
+  );
+
+  transactionController.registerRoutes(app);
+  vipController.registerRoutes(app);
+  DiscordController.registerRoutes(app);
+  
+  const checkExpiringVipsUseCase = new CheckExpiringVipsUseCase(
+    vipRepository,
+    paymentGateway,
+    {
+      info: (message: string, metadata?: Record<string, any>) => {
+        console.log(
+          chalk.bgBlue.black(' ℹ️ INFO ') +
+          chalk.blue(` ${message}`),
+          metadata || ''
+        );
+        app.log.info(metadata || {}, message);
+      },
+      error: (message: string, metadata?: Record<string, any>) => {
+        console.log(
+          chalk.bgRed.white(' ❌ ERROR ') +
+          chalk.red(` ${message}`),
+          metadata || ''
+        );
+        app.log.error(metadata || {}, message);
+      },
+      warn: (message: string, metadata?: Record<string, any>) => {
+        console.log(
+          chalk.bgYellow.black(' ⚠️ WARN ') +
+          chalk.yellow(` ${message}`),
+          metadata || ''
+        );
+        app.log.warn(metadata || {}, message);
+      },
+      debug: (message: string, metadata?: Record<string, any>) => {
+        console.log(
+          chalk.bgGray.white(' 🔍 DEBUG ') +
+          chalk.gray(` ${message}`),
+          metadata || ''
+        );
+        app.log.debug(metadata || {}, message);
+      }
+    }
+  );
+
+
+  const vipScheduler = new VipScheduler(checkExpiringVipsUseCase);
+  vipScheduler.start();
+
+
+  app.addHook('onClose', async () => {
+    console.log(chalk.bgYellow.black(' 🔄 SHUTDOWN ') + chalk.yellow(' Server shutting down...'));
+    await prisma.$disconnect();
+  });
+
+  return app;
+}
+
+async function bootstrap() {
+  try {
+    const server = await createServer();
+    const port = parseInt(process.env.PORT || '8080', 10);
+
+
+    await server.listen({ port });
+    console.log(
+      chalk.bgGreen.black(' 🚀 SERVER ') +
+      chalk.green(` Server listening on localhost:${port}`)
+    );
+  } catch (error) {
+    console.error(
+      chalk.bgRed.white(' 💥 FATAL ') +
+      chalk.red(' Failed to start server:'),
+      error
+    );
+    process.exit(1);
+  }
+}
+
+
+process.on('uncaughtException', (error) => {
+  console.error(
+    chalk.bgRed.white(' 💥 UNCAUGHT ') +
+    chalk.red(' Uncaught Exception:'),
+    error
+  );
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (error) => {
+  console.error(
+    chalk.bgRed.white(' 💥 UNHANDLED ') +
+    chalk.red(' Unhandled Rejection:'),
+    error
+  );
+  process.exit(1);
+});
+
+bootstrap();
+
+export { createServer };

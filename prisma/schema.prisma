@@ -1,0 +1,87 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// Schema existente da Lunna
+model LunarCoins {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  user_id     String   @unique // Discord ID
+  language    String?
+  hasVoted    Boolean  @default(false)
+  voteTimestamp Int    @default(0)
+  vip_type    String   @default("free")
+  isVip       Boolean  @default(false)
+  vip_timestamp Int    @default(0)
+  coins       Int      @default(0)
+  prompts_used Int     @default(0)
+  image_prompts_used Int @default(0)
+  autoRenew Boolean @default(false)
+
+  @@map("lunarcoins") 
+}
+
+model Transaction {
+  id        String          @id @default(uuid()) @map("_id")
+  userId    String
+  type      TransactionType
+  amount    Float
+  paymentId String?    
+  name String?
+  description String?
+  status    String  
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([userId])
+  @@index([paymentId])
+}
+
+enum TransactionType {
+  VIP
+  COINS
+  SUBSCRIPTION
+}
+model VipTier {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String   @unique 
+  price       Float
+  duration    Int      
+  coins       Int     
+  benefits    String[]
+
+  @@map("store_vip_tiers")
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+model VipRenewalAttempt {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String
+  vipTierId         String
+  checkoutSessionId String   @unique
+  status            String  
+  createdAt         DateTime @default(now())
+}
+
+model VipDeactivation {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String
+  reason    String   
+  createdAt DateTime @default(now())
+}
