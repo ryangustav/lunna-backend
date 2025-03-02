@@ -167,4 +167,4 @@ Este projeto está licenciado sob os termos da licença [MIT](LICENSE).
 
 ## 🌟 Créditos
 
-Desenvolvido por [Ryan Gustav](https://github.com/ryangustav).
+Desenvolvido por [Ryan Gustav](https://github.com/ryangustav) e equipe Lunna.
