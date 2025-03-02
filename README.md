@@ -4,12 +4,13 @@ Backend para o bot Lunna, uma aplicação de integração com Discord que oferec
 
 ## 📋 Sobre o Projeto
 
-O Lunna Backend é um serviço de API construído com Node.js, Express e Prisma que gerencia o sistema de economia virtual (LunarCoins), assinaturas VIP e processamentos de pagamentos para o bot Lunna do Discord. A aplicação utiliza MongoDB como banco de dados e implementa uma arquitetura organizada com controladores, middlewares e serviços bem definidos.
+O Lunna Backend é um serviço de API construído com Node.js, TypeScript, Fastify e Prisma que gerencia o sistema de economia virtual (LunarCoins), assinaturas VIP e processamentos de pagamentos para o bot Lunna do Discord. A aplicação utiliza MongoDB como banco de dados e implementa uma arquitetura organizada com controladores, middlewares e serviços bem definidos.
 
 ## 🚀 Tecnologias
 
 - **Node.js** - Ambiente de execução JavaScript
-- **Fastify** - Framework web
+- **TypeScript** - Superset tipado de JavaScript
+- **Fastify** - Framework web de alta performance
 - **Prisma** - ORM para banco de dados
 - **MongoDB** - Banco de dados NoSQL
 - **JWT** - Autenticação por tokens
@@ -29,7 +30,7 @@ lunna-backend/
 │   ├── services/           # Serviços de negócio
 │   ├── utils/              # Funções utilitárias
 │   ├── validators/         # Esquemas de validação
-│   └── app.js              # Inicialização da aplicação
+│   └── app.ts              # Inicialização da aplicação
 ├── .env.example            # Variáveis de ambiente de exemplo
 └── package.json            # Dependências e scripts
 ```
@@ -144,6 +145,22 @@ A integração com Stripe permite o processamento seguro de pagamentos para:
 4. O webhook do Stripe notifica o backend sobre o status do pagamento
 5. O sistema atualiza o status do usuário e adiciona benefícios conforme necessário
 
+## 🚀 Performance
+
+O uso do Fastify como framework web proporciona:
+- Manipulação de requisições de alta performance
+- Baixa sobrecarga de memória
+- Tempos de resposta otimizados
+- Suporte nativo a async/await
+
+## 🔧 TypeScript
+
+A implementação em TypeScript oferece:
+- Tipagem estática para redução de erros
+- Melhor suporte a IDEs e autocompletação
+- Documentação implícita através de interfaces
+- Code refactoring mais seguro
+
 ## 🧪 Rodando Testes
 
 ```bash
@@ -167,4 +184,4 @@ Este projeto está licenciado sob os termos da licença [MIT](LICENSE).
 
 ## 🌟 Créditos
 
-Desenvolvido por [Ryan Gustav](https://github.com/ryangustav) e equipe Lunna.
+Desenvolvido com ❤ por [Ryan Gustav](https://github.com/ryangustav) e equipe Lunna.
