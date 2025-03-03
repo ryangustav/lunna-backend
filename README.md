@@ -204,6 +204,10 @@ Para contribuir com o projeto:
 
 Este projeto está licenciado sob os termos da licença [MIT](LICENSE).
 
+## 🌟Star history
+
+[![Star History Chart](https://api.star-history.com/svg?repos=ryangustav/lunna-backend&type=Date)](https://star-history.com/#ryangustav/lunna-backend&Date)
+
 ## 🌟 Créditos
 
 Desenvolvido com ❤ por [Ryan Gustav](https://github.com/ryangustav) e equipe Lunna.
