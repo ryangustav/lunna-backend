@@ -54,11 +54,31 @@ yarn install
 
 3. Configure o arquivo `.env` baseado no `.env.example`:
 ```
-DATABASE_URL=mongodb+srv://user:password@cluster.mongodb.net/database
-JWT_SECRET=seu_jwt_secret
-STRIPE_SECRET_KEY=sk_test_your_stripe_key
-STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
-CLIENT_URL=http://localhost:3000
+
+# DB Config
+DATABASE_URL="Mongo db URL"
+
+# Discord Secrets
+DISCORD_API_TOKEN="Discord API Token"
+DISCORD_CLIENT_ID="Discord Client ID"
+DISCORD_CLIENT_SECRET="Discord Client secret"
+DISCORD_REDIRECT_URI="Callback url example: http://localhost:8080/auth/discord/callback"
+WEBHOOK_OAUTH="Discord oauth URL"
+
+# Stripe secrets
+STRIPE_SECRET_KEY="Stripe secret key"
+STRIPE_WEBHOOK_SECRET="YOur stripe webhook secret"
+SITE_URL="Your site URL example: localhost:8080"
+
+# Mercado pago secret
+MERCADO_PAGO_SECRET_KEY="Your MP Secret key
+
+# Frontend
+FRONTEND_URL="http://localhost:3000"
+
+# API Secrets
+SESSION_SECRET="Your session secret"
+JWT_SECRET="Your JWT Secret key"
 ```
 
 4. Execute as migrações do Prisma:
