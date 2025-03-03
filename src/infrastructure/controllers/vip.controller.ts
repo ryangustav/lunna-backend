@@ -10,9 +10,9 @@ export class VipController {
     private readonly paymentGateway: StripePaymentGateway
   ) {}
 
-  // Registra as rotas relacionadas a VIP no Fastify
+
   public registerRoutes(fastify: FastifyInstance): void {
-    // Rotas que requerem autenticação
+
     fastify.post('/vip/activate', {
       handler: this.activateVip.bind(this),
       onRequest: async (request: FastifyRequest & { user?: any }, reply) => {
@@ -49,7 +49,6 @@ export class VipController {
     });
   }
 
-  // Ativa o VIP para um usuário após uma transação bem-sucedida
   async activateVip(request: FastifyRequest, reply: FastifyReply): Promise<void> {
     try {
       const { userId, tierId, transactionId } = request.body as any;
@@ -100,7 +99,7 @@ export class VipController {
     }
   }
 
-  // Lista todos os tiers de VIP disponíveis
+
   async getVipTiers(request: FastifyRequest, reply: FastifyReply): Promise<void> {
     try {
       const tiers = await this.vipRepository.getAllTiers();
@@ -118,7 +117,7 @@ export class VipController {
     }
   }
 
-  // Inicia o processo de compra de VIP
+
   async purchaseVip(request: FastifyRequest, reply: FastifyReply): Promise<void> {
     try {
       const { userId, tierId } = request.body as any;
@@ -133,7 +132,7 @@ export class VipController {
         return;
       }
       
-      // Cria sessão de pagamento
+
       const paymentSession = await this.paymentGateway.createCheckoutSession({
         userId: userId as string,
         amount: tier.price as number,

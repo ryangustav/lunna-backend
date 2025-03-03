@@ -52,7 +52,6 @@ export async function authMiddleware(
   const authHeader = request.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    console.log("❌ Token not provided");
     return reply.status(401).send({
       success: false,
       error: 'Unauthorized - Token not provided'
@@ -202,7 +201,7 @@ export class DiscordOAuthController {
 
   
   
-  // Método para buscar o usuário no Discord usando o ID
+ 
   private async fetchDiscordUserFromToken(userId: string): Promise<DiscordUser | null> {
     try {
       const response = await fetch(`https://discord.com/api/users/${userId}`, {
@@ -262,7 +261,7 @@ export class DiscordOAuthController {
     }
   }
 
-  // Método auxiliar para buscar dados do usuário do Discord
+
   private async fetchDiscordUser(accessToken: string): Promise<DiscordUser | null> {
     try {
       const response = await fetch('https://discord.com/api/users/@me', {
@@ -289,7 +288,7 @@ export function setupDiscordAuth(fastify: FastifyInstance): void {
 
   const discordController = new DiscordOAuthController();
   
-  // First register the middleware
+
   registerAuthMiddleware(fastify, {
     secret: process.env.JWT_SECRET || 'your-jwt-secret-key',
     skipRoutes: [

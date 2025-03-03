@@ -14,7 +14,7 @@ export class TransactionController {
     private readonly paymentGateway: PaymentGateway
   ) {}
 
-  // Registra as rotas relacionadas a transações no Fastify
+
   public registerRoutes(fastify: FastifyInstance): void {
     fastify.post('/transactions/create', this.createTransaction.bind(this));
     fastify.get('/transactions/user/:userId', this.getUserTransactions.bind(this));
@@ -53,7 +53,7 @@ async successTransaction(request: FastifyRequest, reply: FastifyReply): Promise<
   }
 }
 
-  // Cria uma nova transação e retorna um link de pagamento
+
   async createTransaction(request: FastifyRequest, reply: FastifyReply): Promise<void> {
     try {
       const { userId, type, tierId, metadata } = request.body as any;
@@ -62,7 +62,7 @@ async successTransaction(request: FastifyRequest, reply: FastifyReply): Promise<
 
 
       
-      // Criar sessão de pagamento no gateway
+     
       const paymentSession = await this.paymentGateway.createCheckoutSession({
         userId: userId as string,
         amount: amount as number,
@@ -74,7 +74,7 @@ async successTransaction(request: FastifyRequest, reply: FastifyReply): Promise<
         }
       });
 
-      // Registrar transação no banco de dados
+   
       await this.transactionRepository.create({
         user_id: userId,
         type: type as TransactionType,
@@ -99,7 +99,7 @@ async successTransaction(request: FastifyRequest, reply: FastifyReply): Promise<
     }
   }
 
-  // Busca todas as transações de um usuário
+
   async getUserTransactions(request: FastifyRequest, reply: FastifyReply): Promise<void> {
     try {
       const { userId } = request.params as any;
@@ -125,7 +125,7 @@ async successTransaction(request: FastifyRequest, reply: FastifyReply): Promise<
     }
   }
 
-  // Busca uma transação pelo ID
+
   async getTransactionById(request: FastifyRequest, reply: FastifyReply): Promise<void> {
     try {
       const { id } = request.params as any;
@@ -153,7 +153,7 @@ async successTransaction(request: FastifyRequest, reply: FastifyReply): Promise<
     }
   }
 
-  // Manipula webhooks do gateway de pagamento
+
   async handlePaymentWebhook(request: FastifyRequest, reply: FastifyReply): Promise<void> {
     try {
       const event = request.body as any;
@@ -164,7 +164,7 @@ async successTransaction(request: FastifyRequest, reply: FastifyReply): Promise<
         return;
       }
       
-      // Busca a transação pelo ID de pagamento
+
       const transaction = await this.transactionRepository.findByPaymentId(paymentId);
       
       if (!transaction) {
@@ -172,7 +172,7 @@ async successTransaction(request: FastifyRequest, reply: FastifyReply): Promise<
         return;
       }
       
-      // Atualiza o status da transação com base no evento do webhook
+    
       let newStatus: PaymentStatus;
       
       switch (event.type) {
@@ -191,7 +191,7 @@ async successTransaction(request: FastifyRequest, reply: FastifyReply): Promise<
       
       await this.transactionRepository.updateStatus(transaction.id, newStatus);
       
-      // Resposta para o webhook
+
       reply.send({ received: true });
     } catch (error) {
       request.log.error({ error }, 'Error processing payment webhook');
@@ -199,7 +199,6 @@ async successTransaction(request: FastifyRequest, reply: FastifyReply): Promise<
     }
   }
 
-  // Busca estatísticas de transações do usuário
   async getUserStats(request: FastifyRequest, reply: FastifyReply): Promise<void> {
     try {
       const { userId } = request.params as any;

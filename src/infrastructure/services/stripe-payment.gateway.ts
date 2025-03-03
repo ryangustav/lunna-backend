@@ -37,7 +37,7 @@ export class StripePaymentGateway implements PaymentGateway {
             name: params.productName || 'Payment',
             description: params.description || 'Transaction payment',
           },
-          unit_amount: params.amount * 100, // Stripe expects the amount in the smallest currency unit
+          unit_amount: params.amount * 100, 
         },
         quantity: 1,
       }],

@@ -17,7 +17,7 @@ const authPlugin = fp(async (fastify: FastifyInstance, options: AuthOptions) => 
     const { secret, skipRoutes = [] } = options;
   
     fastify.addHook('onRequest', async (request: FastifyRequest, reply: FastifyReply) => {
-      const pathWithoutQuery = request.url.split('?')[0]; // Remove query params da URL
+      const pathWithoutQuery = request.url.split('?')[0]; 
   
       if (skipRoutes.includes(pathWithoutQuery)) {
         return; 
@@ -48,7 +48,7 @@ const authPlugin = fp(async (fastify: FastifyInstance, options: AuthOptions) => 
     });
   
 
-  // Add helper methods to request
+
   fastify.decorateRequest('requireAuth', function(this: FastifyRequest & { user?: AuthPayload }, reply: FastifyReply) {
     if (!this.user) {
       reply.status(401).send({
