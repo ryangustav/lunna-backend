@@ -83,7 +83,7 @@ async function createServer(): Promise<FastifyInstance> {
 
   await app.register(authPlugin, {
     secret: process.env.JWT_SECRET!,
-    skipRoutes: ["/get-voted", "/vote/webhook", "/", '/auth/login', '/transactions/cancel', '/transactions/success', '/auth/register', '/vip/tiers', '/auth/discord', '/auth/discord/callback', '/auth/logout']
+    skipRoutes: ["/vote/get-voted", "/vote/webhook", "/", '/auth/login', '/transactions/cancel', '/transactions/success', '/auth/register', '/vip/tiers', '/auth/discord', '/auth/discord/callback', '/auth/logout']
   });
 
 
