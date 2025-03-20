@@ -26,16 +26,21 @@ import authPlugin from './infrastructure/plugins/auth.plugin';
 import { setupVoteModule } from './config/di';
 
 
+
 /**
- * Creates and configures a Fastify server instance.
+ * Creates a Fastify server with the necessary plugins and services registered.
+ * The server has rate limiting, helmet, and bot protection enabled.
+ * It also has a logger service, a discord notification service, and a payment gateway.
+ * The discord notification service is used to send notifications to a discord channel.
+ * The payment gateway is used to handle payments.
+ * The server also has a vote controller, a transaction controller, and a vip controller.
+ * The vote controller is used to handle votes.
+ * The transaction controller is used to handle transactions.
+ * The vip controller is used to handle vip subscriptions.
+ * The server also has a vip scheduler that runs every minute and checks for expiring vip subscriptions.
+ * If a subscription is expiring, it sends a notification to the discord channel.
  *
- * This function initializes environment variables, sets up Fastify with
- * necessary plugins and services, and configures routes and graceful shutdown
- * mechanisms. It integrates with Prisma for database access, Stripe for payment
- * processing, and Discord for notifications. It also sets up VIP activation and
- * expiration checking use cases, along with a scheduler for periodic tasks.
- *
- * @returns {Promise<FastifyInstance>} A promise that resolves to a configured Fastify instance.
+ * @returns {FastifyInstance} The created server.
  */
 async function createServer(): Promise<FastifyInstance> {
 
