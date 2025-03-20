@@ -99,12 +99,23 @@ export class DiscordOAuthController {
   }
 
   public registerRoutes(fastify: FastifyInstance): void {
+    fastify.post('/', this.helloWorld.bind(this));
     fastify.get('/auth/discord', this.redirectToDiscord.bind(this));
     fastify.get('/auth/discord/callback', this.handleCallback.bind(this));
     fastify.get('/auth/me', this.getCurrentUser.bind(this));
     fastify.get('/auth/logout', this.logout.bind(this));
   }
 
+ async handleTopGGWebhook(request: FastifyRequest, reply: FastifyReply): Promise<void> {
+    const { message } = request.body as { message: string };
+    console.log(message);
+    reply.send('OK');
+  }
+
+
+  async helloWorld(request: FastifyRequest, reply: FastifyReply): Promise<void> {
+    reply.send('Hello, World!');
+  }
 
   async redirectToDiscord(request: FastifyRequest, reply: FastifyReply): Promise<void> {
     const authUrl = new URL('https://discord.com/api/oauth2/authorize');
@@ -292,6 +303,7 @@ export function setupDiscordAuth(fastify: FastifyInstance): void {
   registerAuthMiddleware(fastify, {
     secret: process.env.JWT_SECRET || 'your-jwt-secret-key',
     skipRoutes: [
+      '/',
       '/auth/discord', 
       '/auth/discord/callback', 
       '/auth/logout'

@@ -11,13 +11,20 @@ import { PrismaTransactionRepository } from './infrastructure/repositories/prism
 import { LoggerService } from './infrastructure/services/logger.service';
 import { ActivateVipUseCase } from './application/usecases/vip/activate-vip.usecase';
 import { CheckExpiringVipsUseCase } from './application/usecases/vip/check-expiring-vips.usecase';
+import { RegisterVoteUseCase } from './application/usecases/vote/RegisterVoteUseCase';
+import { GetVoteStatusUseCase } from './application/usecases/vote/GetVoteStatusUseCase';
 import { VipScheduler } from './infrastructure/schedule/vip.schedule';
 import { PaymentConfig } from './config/payment.config';
 import { TransactionController } from './infrastructure/controllers/transaction.controller';
 import { VipController } from './infrastructure/controllers/vip.controller';
 import { DiscordOAuthController } from './infrastructure/controllers/discord.controller';
+import { VoteController } from './infrastructure/controllers/vote.controller';
+import { WebhookService } from './application/services/Webhook.service';
+import { PrismaVoteRepository } from './infrastructure/services/PrismaVoteRepository';
 import securityPlugin from './infrastructure/plugins/security.plugin';
 import authPlugin from './infrastructure/plugins/auth.plugin';
+import { setupVoteModule } from './config/di';
+
 
 /**
  * Creates and configures a Fastify server instance.
@@ -34,6 +41,7 @@ async function createServer(): Promise<FastifyInstance> {
 
   dotenv.config();
 
+  const topggWebhookAuth =  `${process.env.TOP_GG!}`;
 
   const app = Fastify({
     logger: true,
@@ -70,7 +78,7 @@ async function createServer(): Promise<FastifyInstance> {
 
   await app.register(authPlugin, {
     secret: process.env.JWT_SECRET!,
-    skipRoutes: ['/auth/login', '/transactions/cancel', '/transactions/success', '/auth/register', '/vip/tiers', '/auth/discord', '/auth/discord/callback', '/auth/logout']
+    skipRoutes: ["/get-voted", "/vote/webhook", "/", '/auth/login', '/transactions/cancel', '/transactions/success', '/auth/register', '/vip/tiers', '/auth/discord', '/auth/discord/callback', '/auth/logout']
   });
 
 
@@ -111,6 +119,18 @@ async function createServer(): Promise<FastifyInstance> {
 
   const DiscordController = new DiscordOAuthController();
 
+  
+  const registerVoteUseCase = new RegisterVoteUseCase(
+    new PrismaVoteRepository(prisma),
+    new WebhookService(process.env.DISCORD_WEBHOOK_URL!)
+  );
+
+  const getVoteStatusUseCase = new GetVoteStatusUseCase(
+    new PrismaVoteRepository(prisma)
+  )
+ 
+   setupVoteModule(process.env.TOP_GG!).voteController.registerRoutes(app);
+
   const transactionController = new TransactionController(
     transactionRepository,
     vipRepository,
@@ -126,7 +146,8 @@ async function createServer(): Promise<FastifyInstance> {
   transactionController.registerRoutes(app);
   vipController.registerRoutes(app);
   DiscordController.registerRoutes(app);
-  
+
+
   const checkExpiringVipsUseCase = new CheckExpiringVipsUseCase(
     vipRepository,
     paymentGateway,
@@ -185,7 +206,7 @@ async function bootstrap() {
     const port = parseInt(process.env.PORT || '8080', 10);
 
 
-    await server.listen({ port });
+    await server.listen({ port, host: '0.0.0.0' });
     console.log(
       chalk.bgGreen.black(' 🚀 SERVER ') +
       chalk.green(` Server listening on localhost:${port}`)

@@ -85,3 +85,28 @@ model VipDeactivation {
   reason    String   
   createdAt DateTime @default(now())
 }
+
+model Vote {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @unique
+  hasCollected Boolean  @default(false)
+  hasVoted    Boolean  @default(false)
+  type        String?
+  query       String?
+  votedAt     DateTime @default(now())
+
+  @@map("votes")
+}
+
+model Auth {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId           String   @unique
+  hasAuthenticated Boolean  @default(true)
+  email            String?
+  username         String?
+  accessToken      String
+  refreshToken     String
+  authenticatedAt  DateTime @default(now())
+
+  @@map("auths")
+}
