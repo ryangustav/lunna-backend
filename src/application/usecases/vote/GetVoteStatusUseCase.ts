@@ -17,7 +17,7 @@ export class GetVoteStatusUseCase {
       return { hasVoted: false, hasCollected: false };
     }
 
-    // Marcar como coletado
+
     await this.voteRepository.markAsCollected(userId);
     
     return {

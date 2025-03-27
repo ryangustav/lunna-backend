@@ -14,17 +14,47 @@ export interface AuthPayload {
 }
 
 const authPlugin = fp(async (fastify: FastifyInstance, options: AuthOptions) => {
-    const { secret, skipRoutes = [] } = options;
+  const { secret, skipRoutes = [] } = options;
+
+  fastify.addHook('onRequest', async (request: FastifyRequest, reply: FastifyReply) => {
+    const pathWithoutQuery = request.url.split('?')[0];
+    
+   
+    const isImageFile = /\.(png|jpg|jpeg|gif|svg|webp)$/i.test(pathWithoutQuery);
+    
+
+    if (skipRoutes.includes(pathWithoutQuery) || isImageFile) {
+      return;
+    } else {
+   
+      const hasPatternMatch = skipRoutes.some(route => {
   
-    fastify.addHook('onRequest', async (request: FastifyRequest, reply: FastifyReply) => {
-      const pathWithoutQuery = request.url.split('?')[0]; 
-  
-      if (skipRoutes.includes(pathWithoutQuery)) {
-        return; 
-      } else {
-  
+        if (route.includes(':')) {
+          const routeParts = route.split('/').filter(Boolean);
+          const pathParts = pathWithoutQuery.split('/').filter(Boolean);
+          
+      
+          if (routeParts.length !== pathParts.length) return false;
+          
+       
+          for (let i = 0; i < routeParts.length; i++) {
+      
+            if (routeParts[i].startsWith(':')) continue;
+    
+            if (routeParts[i] !== pathParts[i]) return false;
+          }
+          
+          return true;
+        }
+        return false;
+      });
+      
+      if (hasPatternMatch) {
+        return;
+      }
+
       const authHeader = request.headers.authorization;
-  
+
       if (!authHeader || !authHeader.startsWith('Bearer ')) {
         console.log(`❌ Token not provided`);
         return reply.status(401).send({
@@ -34,7 +64,7 @@ const authPlugin = fp(async (fastify: FastifyInstance, options: AuthOptions) => 
       }
     
       const token = authHeader.split(' ')[1];
-  
+
       try {
         const payload = jwt.verify(token, secret) as AuthPayload;
         (request as any).user = payload;
@@ -45,9 +75,7 @@ const authPlugin = fp(async (fastify: FastifyInstance, options: AuthOptions) => 
         });
       }
     }
-    });
-  
-
+  });
 
   fastify.decorateRequest('requireAuth', function(this: FastifyRequest & { user?: AuthPayload }, reply: FastifyReply) {
     if (!this.user) {

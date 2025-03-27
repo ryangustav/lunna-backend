@@ -3,7 +3,6 @@ import fetch from 'node-fetch';
 import * as jwt from 'jsonwebtoken';
 import { discordConfig } from '../../config/discord.config';
 
-// Interfaces
 interface DiscordUser {
   id: string;
   username: string;
@@ -32,7 +31,7 @@ interface AuthOptions {
   skipRoutes?: string[];
 }
 
-// Middleware de autenticação
+
 export async function authMiddleware(
   request: FastifyRequest,
   reply: FastifyReply,
@@ -274,6 +273,7 @@ export class DiscordOAuthController {
 
 
   private async fetchDiscordUser(accessToken: string): Promise<DiscordUser | null> {
+  console.log(accessToken)
     try {
       const response = await fetch('https://discord.com/api/users/@me', {
         headers: {
@@ -310,6 +310,6 @@ export function setupDiscordAuth(fastify: FastifyInstance): void {
     ]
   });
   
-  // Then register the routes
+  
   discordController.registerRoutes(fastify);
 }

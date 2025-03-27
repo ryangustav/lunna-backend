@@ -2,7 +2,7 @@ import path from 'path';
 import dotenv from 'dotenv';
 
 dotenv.config({ 
-  path: path.resolve(__dirname, '../environments/.env') 
+  path: path.resolve(__dirname, '../../src/environments/.env') 
 });
 
 export const PaymentConfig = {

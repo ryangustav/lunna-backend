@@ -2,9 +2,19 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { RegisterVoteUseCase } from '../../application/usecases/vote/RegisterVoteUseCase';
 import { GetVoteStatusUseCase } from '../../application/usecases/vote/GetVoteStatusUseCase';
 import Topgg from '@top-gg/sdk';
+import { WebhookService } from '../../application/services/Webhook.service';
 
 interface GetVoteStatusQuery {
   id: string;
+}
+
+interface Vote {
+  userId: string;
+  hasCollected: boolean;
+  hasVoted: boolean;
+  type?: string | null;
+  query?: string | null;
+  votedAt: Date;
 }
 
 export class VoteController {
@@ -20,6 +30,7 @@ export class VoteController {
   constructor(
     private registerVoteUseCase: RegisterVoteUseCase,
     private getVoteStatusUseCase: GetVoteStatusUseCase,
+    private webhookService: WebhookService,
     topggWebhookAuth: string
   ) {
     this.webhookAuth = topggWebhookAuth;
@@ -42,6 +53,7 @@ export class VoteController {
      
       const vote = request.body as Topgg.WebhookPayload;
       
+      console.log(vote)
 
       const lastProcessed = this.processedUserVotes.get(vote.user);
       const now = Date.now();
@@ -64,6 +76,10 @@ export class VoteController {
         this.processedUserVotes.delete(key);
       }
       
+      await this.webhookService.sendDiscordNotification({
+        content: `<:gold_donator:1053256617518440478> | O usuario <@${vote.user}> (\`${vote.user}\`) acaba de votar!`
+      });
+
       return reply.send({ success: true });
     });
 
@@ -86,6 +102,8 @@ export class VoteController {
             query: voteStatus.query
           });
         }
+
+        console.log(voteStatus)
        
         reply.send(voteStatus);
       } catch (error) {

@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import * as dotenv from 'dotenv';
+import * as path from 'path';
 import { Stripe } from 'stripe';
 import Fastify, { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
@@ -19,11 +20,17 @@ import { TransactionController } from './infrastructure/controllers/transaction.
 import { VipController } from './infrastructure/controllers/vip.controller';
 import { DiscordOAuthController } from './infrastructure/controllers/discord.controller';
 import { VoteController } from './infrastructure/controllers/vote.controller';
+import { ImageController } from './infrastructure/controllers/image.controller';
+import { UploadImageUseCase } from './application/usecases/image/UploadImageUseCase';
+import { CheckImageExistsUseCase } from './application/usecases/image/CheckImageExistsUseCase';
 import { WebhookService } from './application/services/Webhook.service';
 import { PrismaVoteRepository } from './infrastructure/services/PrismaVoteRepository';
 import securityPlugin from './infrastructure/plugins/security.plugin';
 import authPlugin from './infrastructure/plugins/auth.plugin';
 import { setupVoteModule } from './config/di';
+import { join } from 'path';
+import { FileSystemImageRepository } from './infrastructure/repositories/FileSystemImageRepository';
+import fastifyMultipart from '@fastify/multipart';
 
 
 
@@ -44,7 +51,10 @@ import { setupVoteModule } from './config/di';
  */
 async function createServer(): Promise<FastifyInstance> {
 
-  dotenv.config();
+  dotenv.config({ 
+    path: path.resolve(__dirname, '../src/environments/.env') 
+  });
+  
 
   const topggWebhookAuth =  `${process.env.TOP_GG!}`;
 
@@ -83,7 +93,14 @@ async function createServer(): Promise<FastifyInstance> {
 
   await app.register(authPlugin, {
     secret: process.env.JWT_SECRET!,
-    skipRoutes: ["/vote/get-voted", "/vote/webhook", "/", '/auth/login', '/transactions/cancel', '/transactions/success', '/auth/register', '/vip/tiers', '/auth/discord', '/auth/discord/callback', '/auth/logout']
+    skipRoutes: ['/cleanup-images', '/backgrounds/:filename', '/base/', '/insignias/', '/search/:filename', "/vote/get-voted", "/vote/webhook", "/", '/auth/login', '/transactions/cancel', '/transactions/success', '/auth/register', '/vip/tiers', '/auth/discord', '/auth/discord/callback', '/auth/logout']
+  });
+
+  await app.register(fastifyMultipart, {
+    limits: {
+      fileSize: 5 * 1024 * 1024, 
+      files: 1                   
+    }
   });
 
 
@@ -94,8 +111,29 @@ async function createServer(): Promise<FastifyInstance> {
 
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: '2025-01-27.acacia'
+    apiVersion: '2025-02-24.acacia'
   });
+
+
+  const rootPath = process.cwd();
+  const imagesFolder = join(rootPath, 'src','uploads', 'backgrounds');
+  const metadataFolder = join(rootPath, 'src', 'data');
+  
+ 
+  const imageRepository = new FileSystemImageRepository(metadataFolder);
+  
+ 
+  const uploadImageUseCase = new UploadImageUseCase(
+    imageRepository,
+    imagesFolder
+  );
+  
+  const checkImageExistsUseCase = new CheckImageExistsUseCase(
+    imageRepository,
+    imagesFolder
+  );
+  
+
 
 
   const paymentGateway = new StripePaymentGateway(stripe, {
@@ -108,7 +146,7 @@ async function createServer(): Promise<FastifyInstance> {
   });
   
   const notificationService = new DiscordNotificationService(
-    process.env.DISCORD_WEBHOOK_URL!
+    process.env.WEBHOOK_OAUTH!
   );
 
 
@@ -124,17 +162,17 @@ async function createServer(): Promise<FastifyInstance> {
 
   const DiscordController = new DiscordOAuthController();
 
-  
-  const registerVoteUseCase = new RegisterVoteUseCase(
-    new PrismaVoteRepository(prisma),
-    new WebhookService(process.env.DISCORD_WEBHOOK_URL!)
+  // Criar controller
+  const imageController = new ImageController(
+    uploadImageUseCase,
+    checkImageExistsUseCase,
+    'https://lunna-api.discloud.app'
   );
-
   const getVoteStatusUseCase = new GetVoteStatusUseCase(
     new PrismaVoteRepository(prisma)
   )
  
-   setupVoteModule(process.env.TOP_GG!).voteController.registerRoutes(app);
+  setupVoteModule(process.env.TOP_GG!, process.env.WEBHOOK_OAUTH!).voteController.registerRoutes(app);
 
   const transactionController = new TransactionController(
     transactionRepository,
@@ -151,6 +189,7 @@ async function createServer(): Promise<FastifyInstance> {
   transactionController.registerRoutes(app);
   vipController.registerRoutes(app);
   DiscordController.registerRoutes(app);
+  imageController.registerRoutes(app);
 
 
   const checkExpiringVipsUseCase = new CheckExpiringVipsUseCase(

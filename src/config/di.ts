@@ -5,7 +5,7 @@ import { RegisterVoteUseCase } from '../application/usecases/vote/RegisterVoteUs
 import { GetVoteStatusUseCase } from '../application/usecases/vote/GetVoteStatusUseCase';
 import { WebhookService } from '../application/services/Webhook.service';
 
-export function setupVoteModule(webHookOauth: string) {
+export function setupVoteModule(webHookOauth: string, webhookUrl: string) {
  
   const prismaClient = new PrismaClient();
   
@@ -14,16 +14,17 @@ export function setupVoteModule(webHookOauth: string) {
   
 
   const webhookService = new WebhookService(
-    'https://discord.com/api/webhooks/1240122224472625232/3r0xvSUu_qEGUJotAL53f6eAAGdLGrWfIOCMPSUcy9qWYdiBp9wbOqR36xGv5ql8whAS'
+    webhookUrl
   );
 
-  const registerVoteUseCase = new RegisterVoteUseCase(voteRepository, webhookService);
+  const registerVoteUseCase = new RegisterVoteUseCase(voteRepository);
   const getVoteStatusUseCase = new GetVoteStatusUseCase(voteRepository);
   
 
   const voteController = new VoteController(
     registerVoteUseCase,
     getVoteStatusUseCase,
+    webhookService,
     webHookOauth
   );
   
