@@ -31,6 +31,7 @@ import { setupVoteModule } from './config/di';
 import { join } from 'path';
 import { FileSystemImageRepository } from './infrastructure/repositories/FileSystemImageRepository';
 import fastifyMultipart from '@fastify/multipart';
+import { AIController } from './infrastructure/controllers/ai-controller';
 
 
 
@@ -93,7 +94,7 @@ async function createServer(): Promise<FastifyInstance> {
 
   await app.register(authPlugin, {
     secret: process.env.JWT_SECRET!,
-    skipRoutes: ['/cleanup-images', '/backgrounds/:filename', '/base/', '/insignias/', '/search/:filename', "/vote/get-voted", "/vote/webhook", "/", '/auth/login', '/transactions/cancel', '/transactions/success', '/auth/register', '/vip/tiers', '/auth/discord', '/auth/discord/callback', '/auth/logout']
+    skipRoutes: ['/ai/generate','/transactions/webhook', '/upload-image','/cleanup-images', '/backgrounds/:filename', '/base/', '/insignias/', '/search/:filename', "/vote/get-voted", "/vote/webhook", "/", '/auth/login', '/transactions/cancel', '/transactions/success', '/auth/register', '/vip/tiers', '/auth/discord', '/auth/discord/callback', '/auth/logout']
   });
 
   await app.register(fastifyMultipart, {
@@ -160,6 +161,8 @@ async function createServer(): Promise<FastifyInstance> {
     notificationService
   );
 
+  const AiController = new AIController(process.env.GEMINI_TOKEN!);
+
   const DiscordController = new DiscordOAuthController();
 
   // Criar controller
@@ -190,7 +193,7 @@ async function createServer(): Promise<FastifyInstance> {
   vipController.registerRoutes(app);
   DiscordController.registerRoutes(app);
   imageController.registerRoutes(app);
-
+  AiController.registerRoutes(app);
 
   const checkExpiringVipsUseCase = new CheckExpiringVipsUseCase(
     vipRepository,

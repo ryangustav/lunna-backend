@@ -83,7 +83,7 @@ export class ImageController {
           return reply.status(400).send({ error: 'Categoria inválida' });
         }
         
-        const filename = `${category}_${name}.png`;
+        const filename = `${name}.png`;
         const directory = path.join('src','uploads', `${category}s`);
         const filePath = path.join(directory, filename);
         
