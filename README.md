@@ -1,60 +1,64 @@
 # Lunna Backend
 
-Backend para o bot Lunna, uma aplicação de integração com Discord que oferece funcionalidades de economia virtual, gerenciamento de VIP e processamento de transações.
+Backend for the Lunna bot, a Discord integration app providing virtual economy, VIP management, and transaction processing.
 
-## 📋 Sobre o Projeto
+## 📋 About the Project
 
-O Lunna Backend é um serviço de API construído com Node.js, TypeScript, Fastify e Prisma que gerencia o sistema de economia virtual (LunarCoins), assinaturas VIP e processamentos de pagamentos para o bot Lunna do Discord. A aplicação utiliza MongoDB como banco de dados e implementa uma arquitetura organizada com controladores, middlewares e serviços bem definidos.
+Lunna Backend is an API service built with Node.js, TypeScript, Fastify, and Prisma that manages the virtual economy system (LunarCoins), VIP subscriptions, and payment processing for the Lunna Discord bot. It uses MongoDB as the database and implements a clean architecture with well-defined controllers, middlewares, and services.
 
-## 🚀 Tecnologias
+## 🚀 Technologies
 
-- **Node.js** - Ambiente de execução JavaScript
-- **TypeScript** - Superset tipado de JavaScript
-- **Fastify** - Framework web de alta performance
-- **Prisma** - ORM para banco de dados
-- **MongoDB** - Banco de dados NoSQL
-- **JWT** - Autenticação por tokens
-- **Stripe** - Processamento de pagamentos
-- **Zod** - Validação de dados
+- **Node.js** - JavaScript runtime environment
+- **TypeScript** - Typed superset of JavaScript
+- **Fastify** - High-performance web framework
+- **Prisma** - Database ORM
+- **MongoDB** - NoSQL database
+- **JWT** - Token-based authentication
+- **Stripe** - Payment processing
+- **Zod** - Data validation
+- **Docker** - Containerization
 
-## ⚙️ Estrutura do Projeto
+## ⚙️ Project Structure
 
 ```
+
 lunna-backend/
 ├── prisma/
-│   └── schema.prisma       # Esquema do banco de dados
+│   └── schema.prisma       # Database schema
 ├── src/
-│   ├── controllers/        # Controladores da API
-│   ├── middlewares/        # Middlewares de autenticação e validação
-│   ├── routes/             # Rotas da API
-│   ├── services/           # Serviços de negócio
-│   ├── utils/              # Funções utilitárias
-│   ├── validators/         # Esquemas de validação
-│   ├── environments/       # Variáveis de ambiente
-│   │   └── .env-example    # Modelo para variáveis de ambiente
-│   └── app.ts              # Inicialização da aplicação
-├── package.json            # Dependências e scripts
-└── tsconfig.json           # Configuração do TypeScript
-```
+│   ├── controllers/        # API controllers
+│   ├── middlewares/        # Authentication and validation middlewares
+│   ├── routes/             # API routes
+│   ├── services/           # Business services
+│   ├── utils/              # Utility functions
+│   ├── validators/         # Validation schemas
+│   ├── environments/       # Environment variables
+│   │   └── .env-example    # Example environment file
+│   └── app.ts              # Application entry point
+├── package.json            # Dependencies and scripts
+└── tsconfig.json           # TypeScript configuration
 
-## 🛠️ Instalação
+````
 
-1. Clone o repositório:
+## 🛠️ Installation
+
+1. Clone the repository:
 ```bash
 git clone https://github.com/ryangustav/lunna-backend.git
 cd lunna-backend
-```
+````
 
-2. Instale as dependências:
+2. Install dependencies:
+
 ```bash
 npm install
-# ou
+# or
 yarn install
 ```
 
-3. Configure o arquivo `.env` baseado no `.env.example`:
-```
+3. Configure the `.env` file based on `.env.example`:
 
+```env
 # DB Config
 DATABASE_URL="Mongo db URL"
 
@@ -67,143 +71,172 @@ WEBHOOK_OAUTH="Discord oauth URL"
 
 # Stripe secrets
 STRIPE_SECRET_KEY="Stripe secret key"
-STRIPE_WEBHOOK_SECRET="YOur stripe webhook secret"
+STRIPE_WEBHOOK_SECRET="Your stripe webhook secret"
 SITE_URL="Your site URL example: localhost:8080"
 
-# Mercado pago secret
-MERCADO_PAGO_SECRET_KEY="Your MP Secret key
+# Mercado Pago secret
+MERCADO_PAGO_SECRET_KEY="Your MP Secret key"
 
 # Frontend
 FRONTEND_URL="http://localhost:3000"
 
 # API Secrets
 SESSION_SECRET="Your session secret"
-JWT_SECRET="Your JWT Secret key"
+JWT_SECRET="Your JWT secret key"
 ```
 
-4. Execute as migrações do Prisma:
+4. Run Prisma migrations:
+
 ```bash
 npx prisma generate
 ```
 
-5. Inicie o servidor:
+5. Start the server:
+
 ```bash
 npm run dev
-# ou
+# or
 yarn dev
 ```
 
-## 📊 Modelos de Dados
+## 🐳 Running with Docker Compose
+
+1. Make sure the `.env` file is correctly configured at `src/environments/.env`.
+
+2. To start backend and MongoDB, run:
+
+```bash
+docker-compose up --build
+```
+
+## 📊 Data Models
 
 ### LunarCoins
-Gerencia a economia virtual dos usuários:
-- Saldo de moedas
-- Status VIP
-- Contagem de prompts utilizados
-- Preferências de idioma
+
+Manages users' virtual economy:
+
+* Coin balance
+* VIP status
+* Prompt usage count
+* Language preferences
 
 ### Transaction
-Registra todas as transações financeiras:
-- Compras de VIP
-- Compras de moedas
-- Renovações de assinatura
+
+Logs all financial transactions:
+
+* VIP purchases
+* Coin purchases
+* Subscription renewals
 
 ### VipTier
-Define os diferentes níveis de assinatura VIP:
-- Preço
-- Duração
-- Benefícios
-- Moedas incluídas
+
+Defines VIP subscription tiers:
+
+* Price
+* Duration
+* Benefits
+* Included coins
 
 ### VipRenewalAttempt
-Rastreia tentativas de renovação de assinaturas VIP:
-- Status da tentativa
-- Sessão de checkout
-- Data da tentativa
+
+Tracks VIP subscription renewal attempts:
+
+* Attempt status
+* Checkout session
+* Attempt date
 
 ### VipDeactivation
-Registra cancelamentos de VIP e seus motivos
 
-## 🔐 Autenticação
+Logs VIP cancellations and reasons
 
-O sistema utiliza autenticação baseada em JWT (JSON Web Tokens) para proteger as rotas da API. Os tokens são validados através do middleware de autenticação.
+## 🔐 Authentication
 
-## 💰 Processamento de Pagamentos
+Uses JWT (JSON Web Tokens) for API route protection. Tokens are validated by authentication middleware.
 
-A integração com Stripe permite o processamento seguro de pagamentos para:
-- Compra de pacotes VIP
-- Compra de LunarCoins
-- Assinaturas recorrentes
+## 💰 Payment Processing
 
-## 📝 Endpoints da API
+Stripe integration enables secure payments for:
 
-### Autenticação
-- `POST /auth/login` - Autenticação de usuário
-- `POST /auth/verify` - Verificação de token
+* VIP packages
+* LunarCoins purchases
+* Recurring subscriptions
 
-### Usuários
-- `GET /users/:id` - Obter informações do usuário
-- `PATCH /users/:id` - Atualizar informações do usuário
+## 📝 API Endpoints
 
-### Economia
-- `GET /coins/:userId` - Obter saldo de LunarCoins
-- `POST /coins/add` - Adicionar LunarCoins
-- `POST /coins/use` - Utilizar LunarCoins
+### Authentication
+
+* `POST /auth/login` - User login
+* `POST /auth/verify` - Token verification
+
+### Users
+
+* `GET /users/:id` - Get user info
+* `PATCH /users/:id` - Update user info
+
+### Economy
+
+* `GET /coins/:userId` - Get LunarCoins balance
+* `POST /coins/add` - Add LunarCoins
+* `POST /coins/use` - Use LunarCoins
 
 ### VIP
-- `GET /vip/tiers` - Listar níveis VIP disponíveis
-- `POST /vip/purchase` - Comprar assinatura VIP
-- `POST /vip/cancel` - Cancelar assinatura VIP
 
-### Pagamentos
-- `POST /payments/create-checkout` - Criar sessão de checkout
-- `POST /payments/webhook` - Webhook para eventos do Stripe
+* `GET /vip/tiers` - List available VIP tiers
+* `POST /vip/purchase` - Purchase VIP subscription
+* `POST /vip/cancel` - Cancel VIP subscription
 
-## 🔄 Fluxo de Pagamento
+### Payments
 
-1. O usuário seleciona um pacote VIP ou de moedas
-2. O sistema cria uma sessão de checkout no Stripe
-3. O usuário completa o pagamento na interface do Stripe
-4. O webhook do Stripe notifica o backend sobre o status do pagamento
-5. O sistema atualiza o status do usuário e adiciona benefícios conforme necessário
+* `POST /payments/create-checkout` - Create checkout session
+* `POST /payments/webhook` - Stripe webhook handler
+
+## 🔄 Payment Flow
+
+1. User selects VIP package or coin bundle
+2. System creates Stripe checkout session
+3. User completes payment on Stripe UI
+4. Stripe webhook notifies backend of payment status
+5. System updates user status and grants benefits accordingly
 
 ## 🚀 Performance
 
-O uso do Fastify como framework web proporciona:
-- Manipulação de requisições de alta performance
-- Baixa sobrecarga de memória
-- Tempos de resposta otimizados
-- Suporte nativo a async/await
+Fastify offers:
+
+* High-performance request handling
+* Low memory overhead
+* Optimized response times
+* Native async/await support
 
 ## 🔧 TypeScript
 
-A implementação em TypeScript oferece:
-- Tipagem estática para redução de erros
-- Melhor suporte a IDEs e autocompletação
-- Documentação implícita através de interfaces
-- Code refactoring mais seguro
+TypeScript provides:
 
-## 🧪 Rodando Testes
+* Static typing to reduce errors
+* Better IDE support and autocomplete
+* Implicit documentation via interfaces
+* Safer code refactoring
+
+## 🧪 Running Tests
 
 ```bash
 npm test
-# ou
+# or
 yarn test
 ```
 
-## 🚧 Desenvolvimento
+## 🚧 Development
 
-Para contribuir com o projeto:
+To contribute:
 
-1. Crie uma branch para sua feature
-2. Faça suas alterações
-3. Execute os testes
-4. Envie um Pull Request
+1. Create a branch for your feature
+2. Make your changes
+3. Run tests
+4. Submit a Pull Request
 
-## 📄 Licença
+## 📄 License
 
-Este projeto está licenciado sob os termos da licença [MIT](LICENSE).
+This project is licensed under the [MIT License](LICENSE).
 
-## 🌟 Créditos
+## 🌟 Credits
 
-Desenvolvido com ❤ por [Ryan Gustav](https://github.com/ryangustav) e equipe Lunna.
+Developed with ❤ by [Ryan Gustavo](https://github.com/ryangustav) and the Lunna team.
