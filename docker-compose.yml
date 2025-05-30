@@ -1,0 +1,20 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mongo
+    env_file:
+      - ./src/environments/.env
+  mongo:
+    image: mongo:6
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+      - .:/app
+
+volumes:
+  mongo-data:

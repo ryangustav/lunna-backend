@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import fetch from 'node-fetch';
+import { fetch } from 'undici';
 import * as jwt from 'jsonwebtoken';
 import { discordConfig } from '../../config/discord.config';
 
