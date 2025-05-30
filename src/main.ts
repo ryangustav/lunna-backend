@@ -4,7 +4,7 @@ import * as path from 'path';
 import { Stripe } from 'stripe';
 import Fastify, { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
-import chalk from 'chalk';
+import colors from 'colors';
 import { StripePaymentGateway } from './infrastructure/services/stripe-payment.gateway';
 import { DiscordNotificationService } from './infrastructure/services/discord-notification.service';
 import { PrismaVipRepository } from './infrastructure/repositories/prisma-vip.repository';
@@ -195,55 +195,54 @@ async function createServer(): Promise<FastifyInstance> {
   imageController.registerRoutes(app);
   AiController.registerRoutes(app);
 
-  const checkExpiringVipsUseCase = new CheckExpiringVipsUseCase(
-    vipRepository,
-    paymentGateway,
-    {
-      info: (message: string, metadata?: Record<string, any>) => {
-        console.log(
-          chalk.bgBlue.black(' ℹ️ INFO ') +
-          chalk.blue(` ${message}`),
-          metadata || ''
-        );
-        app.log.info(metadata || {}, message);
-      },
-      error: (message: string, metadata?: Record<string, any>) => {
-        console.log(
-          chalk.bgRed.white(' ❌ ERROR ') +
-          chalk.red(` ${message}`),
-          metadata || ''
-        );
-        app.log.error(metadata || {}, message);
-      },
-      warn: (message: string, metadata?: Record<string, any>) => {
-        console.log(
-          chalk.bgYellow.black(' ⚠️ WARN ') +
-          chalk.yellow(` ${message}`),
-          metadata || ''
-        );
-        app.log.warn(metadata || {}, message);
-      },
-      debug: (message: string, metadata?: Record<string, any>) => {
-        console.log(
-          chalk.bgGray.white(' 🔍 DEBUG ') +
-          chalk.gray(` ${message}`),
-          metadata || ''
-        );
-        app.log.debug(metadata || {}, message);
-      }
+ const checkExpiringVipsUseCase = new CheckExpiringVipsUseCase(
+  vipRepository,
+  paymentGateway,
+  {
+    info: (message: string, metadata?: Record<string, any>) => {
+      console.log(
+        colors.bgBlue.black(' ℹ️ INFO ') +
+        colors.blue(` ${message}`),
+        metadata || ''
+      );
+      app.log.info(metadata || {}, message);
+    },
+    error: (message: string, metadata?: Record<string, any>) => {
+      console.log(
+        colors.bgRed.white(' ❌ ERROR ') +
+        colors.red(` ${message}`),
+        metadata || ''
+      );
+      app.log.error(metadata || {}, message);
+    },
+    warn: (message: string, metadata?: Record<string, any>) => {
+      console.log(
+        colors.bgYellow.black(' ⚠️ WARN ') +
+        colors.yellow(` ${message}`),
+        metadata || ''
+      );
+      app.log.warn(metadata || {}, message);
+    },
+    debug: (message: string, metadata?: Record<string, any>) => {
+      console.log(
+        colors.bgWhite.white(' 🔍 DEBUG ') +
+        colors.gray(` ${message}`),
+        metadata || ''
+      );
+      app.log.debug(metadata || {}, message);
     }
-  );
+  }
+);
 
 
   const vipScheduler = new VipScheduler(checkExpiringVipsUseCase);
   vipScheduler.start();
 
 
-  app.addHook('onClose', async () => {
-    console.log(chalk.bgYellow.black(' 🔄 SHUTDOWN ') + chalk.yellow(' Server shutting down...'));
-    await prisma.$disconnect();
-  });
-
+ app.addHook('onClose', async () => {
+  console.log(colors.bgYellow.black(' 🔄 SHUTDOWN ') + colors.yellow(' Server shutting down...'));
+  await prisma.$disconnect();
+});
   return app;
 }
 
@@ -254,36 +253,37 @@ async function bootstrap() {
 
 
     await server.listen({ port, host: '0.0.0.0' });
-    console.log(
-      chalk.bgGreen.black(' 🚀 SERVER ') +
-      chalk.green(` Server listening on localhost:${port}`)
-    );
+console.log(
+  colors.bgGreen.black(' 🚀 SERVER ') +
+  colors.green(` Server listening on localhost:${port}`)
+);
+
   } catch (error) {
-    console.error(
-      chalk.bgRed.white(' 💥 FATAL ') +
-      chalk.red(' Failed to start server:'),
-      error
-    );
+console.error(
+  colors.bgRed.white(' 💥 FATAL ') +
+  colors.red(' Failed to start server:'),
+  error
+);
     process.exit(1);
   }
 }
 
 
 process.on('uncaughtException', (error) => {
-  console.error(
-    chalk.bgRed.white(' 💥 UNCAUGHT ') +
-    chalk.red(' Uncaught Exception:'),
-    error
-  );
+console.error(
+  colors.bgRed.white(' 💥 UNCAUGHT ') +
+  colors.red(' Uncaught Exception:'),
+  error
+);
   process.exit(1);
 });
 
 process.on('unhandledRejection', (error) => {
-  console.error(
-    chalk.bgRed.white(' 💥 UNHANDLED ') +
-    chalk.red(' Unhandled Rejection:'),
-    error
-  );
+console.error(
+  colors.bgRed.white(' 💥 UNHANDLED ') +
+  colors.red(' Unhandled Rejection:'),
+  error
+);
   process.exit(1);
 });
 

@@ -23,7 +23,6 @@
     "@prisma/client": "^5.22.0",
     "@top-gg/sdk": "^3.1.6",
     "axios": "^1.6.7",
-    "chalk": "^5.4.1",
     "colors": "^1.4.0",
     "discord.js": "^14.18.0",
     "dotenv": "^16.4.7",
@@ -32,9 +31,9 @@
     "ioredis": "^5.5.0",
     "jsonwebtoken": "^9.0.2",
     "node-cron": "^3.0.3",
-    "node-fetch": "^3.3.2",
     "stripe": "^17.6.0",
-    "tsx": "^4.7.1"
+    "tsx": "^4.7.1",
+    "undici": "^7.10.0"
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^9.0.9",

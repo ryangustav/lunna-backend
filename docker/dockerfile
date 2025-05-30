@@ -1,0 +1,28 @@
+# Stage 1: build
+FROM node:20-bullseye AS builder
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+RUN npm run prisma:generate
+RUN npm run build
+
+# Stage 2: produção
+FROM node:20-bullseye AS production
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install --omit=dev
+
+# Copia somente os arquivos finais e os binários gerados do Prisma
+COPY --from=builder /app/node_modules/.prisma /app/node_modules/.prisma
+COPY --from=builder /app/dist /app/dist
+
+COPY src/environments/.env .env
+
+CMD ["node", "dist/main.js"]
