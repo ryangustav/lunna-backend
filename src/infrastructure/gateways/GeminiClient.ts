@@ -1,4 +1,7 @@
 import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai'
+import { readFileSync } from 'fs'
+import path from 'path'
+
 
 export interface GeminiHistory {
   role: string
@@ -13,6 +16,10 @@ export class GeminiClient {
   }
 
   async startChat(history: GeminiHistory[], prompt: string, comandos: string): Promise<{ text: string; truncated: boolean }> {
+
+const personalityPath = path.resolve(__dirname, '../../../assets/personality/lunnas_personality.txt')
+const personality = readFileSync(personalityPath, 'utf-8')
+
     const safetySettings = [
   { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
   { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
@@ -51,6 +58,7 @@ export class GeminiClient {
           role: 'user',
           parts: [{ text: comandos }],
         },
+         { role: 'model', parts: [{ text: personality }] },
       ],
       generationConfig: { maxOutputTokens: 1000, temperature: 0.5 },
     })
