@@ -98,7 +98,7 @@ export class DiscordOAuthController {
   }
 
   public registerRoutes(fastify: FastifyInstance): void {
-    fastify.post('/', this.helloWorld.bind(this));
+    fastify.get('/', this.helloWorld.bind(this));
     fastify.get('/auth/discord', this.redirectToDiscord.bind(this));
     fastify.get('/auth/discord/callback', this.handleCallback.bind(this));
     fastify.get('/auth/me', this.getCurrentUser.bind(this));

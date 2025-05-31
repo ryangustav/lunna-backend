@@ -17,7 +17,7 @@ export class GeminiClient {
 
   async startChat(history: GeminiHistory[], prompt: string, comandos: string): Promise<{ text: string; truncated: boolean }> {
 
-const personalityPath = path.resolve(__dirname, '../../../assets/personality/lunnas_personality.txt')
+const personalityPath = path.resolve(__dirname, '../../../../assets/personality/lunnas_personality.txt')
 const personality = readFileSync(personalityPath, 'utf-8')
 
     const safetySettings = [

@@ -4,11 +4,11 @@ services:
       context: .
       dockerfile: docker/Dockerfile
     ports:
-      - "3000:3000"
+      - "3000:8080"
     depends_on:
       - mongo
     env_file:
-      - ./src/environments/.env
+      - ./.env
   mongo:
     image: mongo:6
     restart: unless-stopped

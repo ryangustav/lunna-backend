@@ -1,9 +1,7 @@
 import path from 'path';
 import dotenv from 'dotenv';
 
-dotenv.config({ 
-  path: path.resolve(__dirname, '../../src/environments/.env') 
-});
+dotenv.config();
 
 export const PaymentConfig = {
     stripeSecretKey: process.env.STRIPE_SECRET_KEY!,

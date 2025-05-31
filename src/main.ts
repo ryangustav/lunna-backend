@@ -52,9 +52,7 @@ import { AIController } from './infrastructure/controllers/ai-controller';
  */
 async function createServer(): Promise<FastifyInstance> {
 
-  dotenv.config({ 
-    path: path.resolve(__dirname, '../src/environments/.env') 
-  });
+  dotenv.config();
   
 
   const topggWebhookAuth =  `${process.env.TOP_GG!}`;
