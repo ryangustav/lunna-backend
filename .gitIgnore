@@ -5,5 +5,4 @@ dist
 .gitignore
 .vscode
 lunna-backend.zip
-discloud.config
 run.js
