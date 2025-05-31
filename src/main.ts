@@ -173,7 +173,7 @@ async function createServer(): Promise<FastifyInstance> {
     new PrismaVoteRepository(prisma)
   )
  
-  setupVoteModule(process.env.TOP_GG!, process.env.WEBHOOK_OAUTH!).voteController.registerRoutes(app);
+  setupVoteModule(process.env.TOP_GG!, process.env.WEBHOOK_VOTE!).voteController.registerRoutes(app);
 
   const transactionController = new TransactionController(
     transactionRepository,
