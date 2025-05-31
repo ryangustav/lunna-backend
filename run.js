@@ -42,7 +42,7 @@ async function main() {
     console.log('✅ Compilação TypeScript concluída');
 
 
-    const mainJsPath = path.join(__dirname, 'dist', 'src', 'main.js');
+    const mainJsPath = path.join(__dirname, 'dist', 'main.js');
     if (!fs.existsSync(mainJsPath)) {
       console.error('❌ Erro: Não foi possível encontrar o arquivo main.js na pasta dist.');
       process.exit(1);
