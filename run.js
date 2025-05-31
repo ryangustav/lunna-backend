@@ -57,7 +57,7 @@ async function main() {
     }
 
     console.log('🚀 Iniciando aplicação principal...');
-    await runCommand('node dist/main.js');
+    await runCommand('node dist/src/main.js');
    
   } catch (error) {
     console.error('❌ Erro durante a execução:', error.message);
