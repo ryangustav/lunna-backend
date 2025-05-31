@@ -101,7 +101,7 @@ yarn dev
 
 ## 🐳 Running with Docker Compose
 
-1. Make sure the `.env` file is correctly configured at `src/environments/.env`.
+1. Make sure the `.env` file is correctly configured at `.env`.
 
 2. To start backend and MongoDB, run:
 

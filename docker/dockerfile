@@ -7,6 +7,7 @@ COPY package*.json ./
 RUN npm install
 
 COPY . .
+COPY assets ./assets
 
 RUN npm run prisma:generate
 RUN npm run build
@@ -22,7 +23,6 @@ RUN npm install --omit=dev
 # Copia somente os arquivos finais e os binários gerados do Prisma
 COPY --from=builder /app/node_modules/.prisma /app/node_modules/.prisma
 COPY --from=builder /app/dist /app/dist
+COPY --from=builder /app/assets /app/assets
 
-COPY src/environments/.env .env
-
-CMD ["node", "dist/main.js"]
+CMD ["node", "dist/src/main.js"]
