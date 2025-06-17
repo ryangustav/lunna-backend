@@ -28,7 +28,6 @@ interface SecurityOptions {
   redisUrl?: string;
 }
 
-
 const securityPlugin: FastifyPluginAsync<SecurityOptions> = async (fastify: FastifyInstance, options: SecurityOptions) => {
   const {
     rateLimiting = { enabled: true, max: 100, timeWindow: '1 minute' },
@@ -36,7 +35,6 @@ const securityPlugin: FastifyPluginAsync<SecurityOptions> = async (fastify: Fast
     botProtection = { enabled: true, blockSuspiciousBots: false },
     redisUrl = process.env.REDIS_URL
   } = options;
-
 
   let redis: Redis | undefined;
   if (redisUrl) {
@@ -47,7 +45,6 @@ const securityPlugin: FastifyPluginAsync<SecurityOptions> = async (fastify: Fast
       fastify.log.warn('Failed to connect to Redis, falling back to in-memory store');
     }
   }
-
 
   if (helmet.enabled) {
     await fastify.register(import('@fastify/helmet'), {
@@ -69,18 +66,17 @@ const securityPlugin: FastifyPluginAsync<SecurityOptions> = async (fastify: Fast
       timeWindow: rateLimiting.timeWindow,
       redis,
       keyGenerator: (request) => {
-
         const clientIp = request.headers['x-forwarded-for'] || request.ip;
         const userAgent = request.headers['user-agent'] || 'unknown';
         return `${clientIp}-${userAgent}`;
       },
+      allowList: (request) => request.url === '/ai/generate',
       errorResponseBuilder: (request, context) => {
         fastify.log.warn({
           ip: request.ip,
           path: request.url,
           exceededLimit: true
         }, 'Rate limit exceeded');
-        
         return {
           statusCode: 429,
           error: 'Too Many Requests',
@@ -100,55 +96,55 @@ const securityPlugin: FastifyPluginAsync<SecurityOptions> = async (fastify: Fast
               timeWindow: limits.timeWindow
             }
           },
-          handler: (_, reply) => reply.send() 
+          handler: (_, reply) => reply.send()
         });
       }
     }
   }
 
-
   if (botProtection.enabled) {
     fastify.addHook('onRequest', async (request: FastifyRequest, reply: FastifyReply) => {
-      const userAgent = request.headers['user-agent'] || '';
-      
- 
-      const suspiciousBotPatterns = [
-        /[Cc]rawl/, /[Ss]crape/, /[Ss]pider/, 
-        /[Bb]ot(?!fox)/, 
-        /puppeteer/, /selenium/, /headless/,
-        /PhantomJS/, /Lighthouse/, /axios/, /curl/, /wget/
-      ];
-      
+      if (request.url === '/ai/generate') {
+        const token = request.headers['x-internal-token'];
+        if (token !== process.env.INTERNAL_BOT_TOKEN) {
+          return reply.code(403).send({ error: 'Token inválido.' });
+        }
+        return;
+      }
 
+      const userAgent = request.headers['user-agent'] || '';
+      const suspiciousBotPatterns = [
+        /[Cc]rawl/, /[Ss]crape/, /[Ss]pider/, /[Bb]ot(?!fox)/,
+        /puppeteer/, /selenium/, /headless/, /PhantomJS/,
+        /Lighthouse/, /axios/, /curl/, /wget/
+      ];
       const legitimateBotPatterns = [
-        /googlebot/i, /bingbot/i, /yandexbot/i, 
+        /googlebot/i, /bingbot/i, /yandexbot/i,
         /twitterbot/i, /facebookexternalhit/i
       ];
-      
-      const isSuspicious = suspiciousBotPatterns.some(pattern => 
-        pattern.test(userAgent) && 
+
+      const isSuspicious = suspiciousBotPatterns.some(pattern =>
+        pattern.test(userAgent) &&
         !legitimateBotPatterns.some(legit => legit.test(userAgent))
       );
-      
+
       if (isSuspicious) {
         fastify.log.info({
           ip: request.ip,
           userAgent,
           path: request.url
         }, 'Suspicious bot activity detected');
-        
+
         if (botProtection.blockSuspiciousBots) {
-          return reply.code(403).send({ 
-            error: 'Acesso negado. entre em contato com o suporte.' 
+          return reply.code(403).send({
+            error: 'Acesso negado. entre em contato com o suporte.'
           });
         } else {
-
           await new Promise(resolve => setTimeout(resolve, 1500));
         }
       }
     });
   }
-
 
   fastify.addHook('preValidation', (request: FastifyRequest, _reply, done) => {
     if (request.query) {
@@ -163,10 +159,9 @@ const securityPlugin: FastifyPluginAsync<SecurityOptions> = async (fastify: Fast
     if (request.body && typeof request.body === 'object' && !Buffer.isBuffer(request.body)) {
       sanitizeObject(request.body);
     }
-    
+
     done();
   });
-
 
   fastify.addHook('onSend', (_request, reply, _payload, done) => {
     reply.header('X-Content-Type-Options', 'nosniff');
@@ -175,9 +170,7 @@ const securityPlugin: FastifyPluginAsync<SecurityOptions> = async (fastify: Fast
     done();
   });
 
- 
   function sanitizeString(str: string): string {
-  
     return str
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
@@ -189,7 +182,6 @@ const securityPlugin: FastifyPluginAsync<SecurityOptions> = async (fastify: Fast
 
   function sanitizeObject(obj: any): void {
     if (!obj || typeof obj !== 'object') return;
-    
     Object.keys(obj).forEach(key => {
       const value = obj[key];
       if (typeof value === 'string') {

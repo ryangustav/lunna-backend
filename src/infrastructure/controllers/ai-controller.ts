@@ -14,6 +14,7 @@ export class AIController {
     request: FastifyRequest,
     reply: FastifyReply
   ): Promise<void> {
+
     const {
       history,
       prompt,
@@ -27,7 +28,7 @@ export class AIController {
     };
 
     const geminiClient = new GeminiClient(this.geminiToken);
-    const response = await geminiClient.startChat(history, prompt, comandos);
+    const response = await geminiClient.startChat(history, prompt, comandos, userId);
 
     reply.send(response);
   }
