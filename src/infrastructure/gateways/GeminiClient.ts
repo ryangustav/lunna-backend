@@ -15,8 +15,8 @@ export class GeminiClient {
     this.genAI = new GoogleGenerativeAI(geminiToken)
   }
 
-  async startChat(history: GeminiHistory[], prompt: string, comandos: string): Promise<{ text: string; truncated: boolean }> {
-
+  async startChat(history: GeminiHistory[], prompt: string, comandos: string, userId: string): Promise<{ text: string; truncated: boolean }> {
+comandos = comandos.replace(/&#x2F;/g, '/')
 const personalityPath = path.resolve(__dirname, '../../../../assets/personality/lunnas_personality.txt')
 const personality = readFileSync(personalityPath, 'utf-8')
 
@@ -25,12 +25,12 @@ const personality = readFileSync(personalityPath, 'utf-8')
   { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
   { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
   { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
-    ];
+    ]; 
 
     const model = this.genAI.getGenerativeModel({
       model: 'gemini-2.0-flash-exp',
       safetySettings,
-      generationConfig: { maxOutputTokens: 1000, temperature: 1.5 },
+      generationConfig: { maxOutputTokens: 700, temperature: 1.5 },
     })
 
     const formatHistory = (history: GeminiHistory[], prompt: string) => {
@@ -53,12 +53,9 @@ const personality = readFileSync(personalityPath, 'utf-8')
 
     const chat = model.startChat({
       history: [
+        { role: 'user', parts: [{ text: "Hi, my userID is " + userId }] },
         ...formatHistory(history, prompt),
-        {
-          role: 'user',
-          parts: [{ text: comandos }],
-        },
-         { role: 'model', parts: [{ text: personality }] },
+         { role: 'model', parts: [{ text: personality.replace('{commands}', comandos || '') }] },
       ],
       generationConfig: { maxOutputTokens: 1000, temperature: 0.5 },
     })
@@ -67,11 +64,11 @@ const personality = readFileSync(personalityPath, 'utf-8')
     const response = await result.response
     let text = await response.text()
 
-    const truncated = text.length > 2000
+    const truncated = text.length > 1900
     if (truncated) {
-      text = text.substring(0, 1928 - "... \n\n".length) + "... \n\n*A resposta foi interrompida devido ao limite de caracteres do Discord de 2.000*"
+      text = text.substring(0, 1912 - "... \n\n".length) + "... \n\n*A resposta foi interrompida devido ao limite de caracteres do Discord de 2.000*"
     }
-
+ 
     return { text, truncated }
   }
 }
