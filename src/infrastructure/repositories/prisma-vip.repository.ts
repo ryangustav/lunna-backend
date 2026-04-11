@@ -139,5 +139,26 @@ export class PrismaVipRepository implements VipRepository {
         }
       });
     }
+
+    /**
+     * Find a specific user's VIP status by user ID
+     * @param userId The ID of the user to search for
+     * @returns The VIP user data if found, otherwise null
+     */
+    async findUserVip(userId: string): Promise<VipUser | null> {
+      const user = await this.prisma.lunarCoins.findUnique({
+        where: { user_id: userId },
+        select: {
+          user_id: true,
+          isVip: true,
+          vip_type: true,
+          vip_timestamp: true,
+          autoRenew: true,
+          coins: true
+        }
+      });
+
+      return user;
+    }
   }
   

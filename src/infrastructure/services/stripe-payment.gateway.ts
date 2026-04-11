@@ -55,4 +55,20 @@ export class StripePaymentGateway implements PaymentGateway {
       id: session.id,
     };
   }
+
+  /**
+   * Retrieves a checkout session by its ID.
+   * 
+   * @param sessionId - The ID of the checkout session to retrieve.
+   * @returns A promise that resolves to the session data or null if not found.
+   */
+  async retrieveCheckoutSession(sessionId: string): Promise<any> {
+    try {
+      const session = await this.stripe.checkout.sessions.retrieve(sessionId);
+      return session;
+    } catch (error) {
+      console.error('Error retrieving checkout session:', error);
+      return null;
+    }
+  }
 }

@@ -20,4 +20,12 @@ export interface PaymentGateway {
       productName?: string;
       metadata?: Record<string, string>;
     }): Promise<{ url: string; id: string }>;
+
+    /**
+     * Retrieves a checkout session by its ID.
+     * 
+     * @param sessionId - The ID of the checkout session to retrieve.
+     * @returns A promise that resolves to the session data or null if not found.
+     */
+    retrieveCheckoutSession(sessionId: string): Promise<any>;
   }

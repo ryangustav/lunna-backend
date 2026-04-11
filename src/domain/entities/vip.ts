@@ -4,6 +4,7 @@ export interface VipTier {
     price: number;
     duration: number;
     coins: number;
+    benefits: string[];
   }
   
   export interface VipUser {

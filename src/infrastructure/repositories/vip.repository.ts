@@ -9,4 +9,5 @@ export interface VipRepository {
     deactivateUserVip(userId: string): Promise<void>;
     updateAutoRenewal(userId: string, autoRenew: boolean): Promise<void>;
     findExpiringVips(thresholdTimestamp: number): Promise<VipUser[]>;
+    findUserVip(userId: string): Promise<VipUser | null>;
   }

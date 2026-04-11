@@ -60,23 +60,31 @@ export class CheckExpiringVipsUseCase {
  * 
  * @param user - The VIP user whose subscription is to be renewed.
  * 
- * Retrieves the VIP tier information based on the user's current VIP type.
- * If the tier is found, it creates a checkout session for payment processing
- * using the payment gateway. Throws an error if the VIP tier is not found.
+ * For auto-renewal, this creates a checkout session for payment processing.
+ * The actual payment processing and VIP activation will be handled by the webhook.
  */
-
     private async processRenewal(user: VipUser): Promise<void> {
       const tier = await this.vipRepository.findTierByName(user.vip_type);
       if (!tier) throw new Error(`VIP tier not found: ${user.vip_type}`);
-  
-      await this.paymentGateway.createCheckoutSession({
+
+      // Criar sessão de checkout para renovação automática
+      const session = await this.paymentGateway.createCheckoutSession({
         userId: user.user_id,
         amount: tier.price,
         type: 'VIP',
+        productName: `Renovação ${tier.name}`,
+        description: `Renovação automática do VIP ${tier.name}`,
         metadata: {
           tierId: tier.id,
-          isAutoRenewal: 'true'
+          isAutoRenewal: 'true',
+          originalVipType: user.vip_type
         }
+      });
+
+      this.logger.info('Auto-renewal checkout session created', {
+        userId: user.user_id,
+        tierId: tier.id,
+        sessionId: session.id
       });
     }
   }

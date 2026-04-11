@@ -17,6 +17,9 @@ import { GetVoteStatusUseCase } from './application/usecases/vote/GetVoteStatusU
 import { VipScheduler } from './infrastructure/schedule/vip.schedule';
 import { PaymentConfig } from './config/payment.config';
 import { TransactionController } from './infrastructure/controllers/transaction.controller';
+import { GuildSettingsRepository } from './infrastructure/repositories/GuildSettingsRepository';
+import { ManageGuildSettingsUseCase } from './application/usecases/ManageGuildSettings';
+import { GuildSettingsController } from './infrastructure/controllers/guildsettings.controller';
 import { VipController } from './infrastructure/controllers/vip.controller';
 import { DiscordOAuthController } from './infrastructure/controllers/discord.controller';
 import { VoteController } from './infrastructure/controllers/vote.controller';
@@ -92,7 +95,7 @@ async function createServer(): Promise<FastifyInstance> {
 
   await app.register(authPlugin, {
     secret: process.env.JWT_SECRET!,
-    skipRoutes: ['/ai/generate','/transactions/webhook', '/upload-image','/cleanup-images', '/backgrounds/:filename', '/base/', '/insignias/', '/search/:filename', "/vote/get-voted", "/vote/webhook", "/", '/auth/login', '/transactions/cancel', '/transactions/success', '/auth/register', '/vip/tiers', '/auth/discord', '/auth/discord/callback', '/auth/logout']
+    skipRoutes: ['/vip/activate', '/ai/generate','/transactions/webhook', '/upload-image','/cleanup-images', '/backgrounds/:filename', '/base/', '/insignias/', '/search/:filename', "/vote/get-voted", "/vote/webhook", "/", '/auth/login', '/transactions/cancel', '/transactions/success', '/auth/register', '/vip/tiers', '/auth/discord', '/auth/discord/callback', '/auth/logout']
   });
 
   await app.register(fastifyMultipart, {
@@ -178,7 +181,8 @@ async function createServer(): Promise<FastifyInstance> {
   const transactionController = new TransactionController(
     transactionRepository,
     vipRepository,
-    paymentGateway
+    paymentGateway,
+    activateVipUseCase
   );
 
   const vipController = new VipController(
@@ -193,7 +197,12 @@ async function createServer(): Promise<FastifyInstance> {
   imageController.registerRoutes(app);
   AiController.registerRoutes(app);
 
- const checkExpiringVipsUseCase = new CheckExpiringVipsUseCase(
+  const guildSettingsRepository = new GuildSettingsRepository();
+  const manageGuildSettingsUseCase = new ManageGuildSettingsUseCase(guildSettingsRepository);
+  const guildSettingsController = new GuildSettingsController(manageGuildSettingsUseCase);
+  guildSettingsController.registerRoutes(app);
+
+  const checkExpiringVipsUseCase = new CheckExpiringVipsUseCase(
   vipRepository,
   paymentGateway,
   {
@@ -247,7 +256,7 @@ async function createServer(): Promise<FastifyInstance> {
 async function bootstrap() {
   try {
     const server = await createServer();
-    const port = parseInt(process.env.PORT || '8080', 10);
+    const port = parseInt(process.env.PORT || '8081', 10);
 
 
     await server.listen({ port, host: '0.0.0.0' });

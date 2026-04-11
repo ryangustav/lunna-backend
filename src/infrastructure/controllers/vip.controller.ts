@@ -13,13 +13,7 @@ export class VipController {
 
   public registerRoutes(fastify: FastifyInstance): void {
 
-    fastify.post('/vip/activate', {
-      handler: this.activateVip.bind(this),
-      onRequest: async (request: FastifyRequest & { user?: any }, reply) => {
-
-        if (!(request as any).requireAuth(reply)) return;
-      }
-    });
+    fastify.post('/vip/activate', this.activateVip.bind(this));
 
     fastify.get('/vip/status/:userId', {
       handler: this.getVipStatus.bind(this),
@@ -43,6 +37,13 @@ export class VipController {
 
     fastify.post('/vip/purchase', {
       handler: this.purchaseVip.bind(this),
+      onRequest: async (request: FastifyRequest & { user?: any }, reply) => {
+        if (!(request as any).requireAuth(reply)) return;
+      }
+    });
+
+    fastify.put('/vip/auto-renewal', {
+      handler: this.updateAutoRenewal.bind(this),
       onRequest: async (request: FastifyRequest & { user?: any }, reply) => {
         if (!(request as any).requireAuth(reply)) return;
       }
@@ -74,22 +75,37 @@ export class VipController {
     try {
       const { userId } = request.params as any;
       
-      const vipStatus = await this.vipRepository.findByUserId(userId);
+    
+      const vipUser = await this.vipRepository.findUserVip(userId);
       
-      reply.send({
-        success: true,
-        data: vipStatus ? {
-          isVip: true,
-          tier: vipStatus.tierId,
-          expiresAt: vipStatus.expiresAt,
-          daysRemaining: Math.max(0, Math.floor((vipStatus.expiresAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
-        } : {
-          isVip: false,
-          tier: null,
-          expiresAt: null,
-          daysRemaining: 0
-        }
-      });
+      if (vipUser && vipUser.isVip) {
+        const now = Math.floor(Date.now() / 1000);
+        const daysRemaining = Math.max(0, Math.floor((vipUser.vip_timestamp - now) / (24 * 60 * 60)));
+        
+        reply.send({
+          success: true,
+          data: {
+            isVip: true,
+            tier: vipUser.vip_type,
+            expiresAt: new Date(vipUser.vip_timestamp * 1000),
+            daysRemaining: daysRemaining,
+            autoRenew: vipUser.autoRenew,
+            coins: vipUser.coins
+          }
+        });
+      } else {
+        reply.send({
+          success: true,
+          data: {
+            isVip: false,
+            tier: null,
+            expiresAt: null,
+            daysRemaining: 0,
+            autoRenew: false,
+            coins: 0
+          }
+        });
+      }
     } catch (error) {
       request.log.error({ error }, 'Error fetching VIP status');
       reply.status(500).send({ 
@@ -156,6 +172,33 @@ export class VipController {
       reply.status(500).send({ 
         success: false,
         error: 'Failed to initiate VIP purchase' 
+      });
+    }
+  }
+
+  async updateAutoRenewal(request: FastifyRequest, reply: FastifyReply): Promise<void> {
+    try {
+      const { userId, autoRenew } = request.body as any;
+      
+      if (typeof autoRenew !== 'boolean') {
+        reply.status(400).send({
+          success: false,
+          error: 'autoRenew must be a boolean value'
+        });
+        return;
+      }
+      
+      await this.vipRepository.updateAutoRenewal(userId, autoRenew);
+      
+      reply.send({
+        success: true,
+        message: `Auto-renewal ${autoRenew ? 'enabled' : 'disabled'} successfully`
+      });
+    } catch (error) {
+      request.log.error({ error }, 'Error updating auto-renewal');
+      reply.status(500).send({ 
+        success: false,
+        error: 'Failed to update auto-renewal' 
       });
     }
   }
