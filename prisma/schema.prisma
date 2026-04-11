@@ -110,3 +110,18 @@ model Auth {
 
   @@map("auths")
 }
+
+model GuildSettings {
+  id                  String   @id @default(auto()) @map("_id") @db.ObjectId
+  guild_id            String   @unique
+  prefix              String   @default("-")
+  language            String   @default("pt")
+  mod_log_channel     String?
+  welcome_channel     String?
+  quarantine_role     String?
+  anti_spam           Json
+  anti_invite         Json
+  anti_link           Json
+  
+  @@map("guild_settings")
+}
