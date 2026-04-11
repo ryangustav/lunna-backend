@@ -27,6 +27,10 @@ model LunarCoins {
   prompts_used Int     @default(0)
   image_prompts_used Int @default(0)
   autoRenew Boolean @default(false)
+  aboutme     String?     @default("Apenas um viajante estelar explorando o cosmos da Lunna.")
+  background_id String?   @default("default")
+  base_color  String?     @default("#1F2833")
+  insignias   String[]    @default([])
 
   @@map("lunarcoins") 
 }
