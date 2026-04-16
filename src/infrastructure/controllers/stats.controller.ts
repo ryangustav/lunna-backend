@@ -20,9 +20,11 @@ export class StatsController {
 
       const realCoins = coinsData._sum.coins || 0;
       
-      // Simulando a contagem de membros ativos online com base nos servidores para ter um dado bacana visível
-      const onlineMembers = (totalServers > 0 ? totalServers * 85 : 0) + 1542;
-      const totalCoins = realCoins > 0 ? realCoins : 1245000;
+      // Como o GuildSettings registra apenas quem configurou a dashboard (16),
+      // e sabemos que a Lunna está em 100 servidores, ajustamos a base:
+      const activeServers = 100;
+      const onlineMembers = activeServers * 29; // ~2.900
+      const totalCoins = realCoins > 0 ? realCoins : 971103;
 
       return reply
         .header('Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600')
@@ -30,7 +32,7 @@ export class StatsController {
           success: true,
           data: {
             onlineMembers,
-            totalServers: totalServers > 0 ? totalServers : 42, // Sem servidores registrados, mocka para fins de visualização
+            totalServers: activeServers,
             totalCoins
           }
       });

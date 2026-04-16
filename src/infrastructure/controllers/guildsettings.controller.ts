@@ -1,5 +1,6 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { ManageGuildSettingsUseCase } from '../../application/usecases/ManageGuildSettings';
+import { IGuildSettings } from '../../domain/entities/GuildSettings';
 
 export class GuildSettingsController {
     constructor(private manageGuildSettingsUseCase: ManageGuildSettingsUseCase) {}
@@ -32,7 +33,7 @@ export class GuildSettingsController {
             async (request, reply) => {
                 try {
                     const { guildId } = request.params;
-                    const data = request.body;
+                    const data = request.body as Partial<IGuildSettings>;
                     const updatedSettings = await this.manageGuildSettingsUseCase.updateSettings(guildId, data);
                     return reply.send(updatedSettings);
                 } catch (error) {

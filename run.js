@@ -38,7 +38,7 @@ async function main() {
 
 
     console.log('🔨 Compilando TypeScript...');
-    await runCommand('npm run build');
+    await runCommand('sudo npm run build');
     console.log('✅ Compilação TypeScript concluída');
 
 

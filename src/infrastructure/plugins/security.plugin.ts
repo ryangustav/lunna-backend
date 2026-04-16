@@ -51,7 +51,9 @@ const securityPlugin: FastifyPluginAsync<SecurityOptions> = async (fastify: Fast
       contentSecurityPolicy: helmet.contentSecurityPolicy ? {
         directives: {
           defaultSrc: ["'self'"],
-          scriptSrc: ["'self'", "'unsafe-inline'", "js.stripe.com"],
+          scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "js.stripe.com", "cdn.jsdelivr.net", "unpkg.com"],
+          styleSrc: ["'self'", "'unsafe-inline'", "fonts.googleapis.com", "cdn.jsdelivr.net", "unpkg.com"],
+          fontSrc: ["'self'", "fonts.gstatic.com", "cdn.jsdelivr.net", "unpkg.com"],
           frameSrc: ["'self'", "hooks.stripe.com"],
           connectSrc: ["'self'", "api.stripe.com", "discord.com"],
           imgSrc: ["'self'", "cdn.discordapp.com", "data:"],

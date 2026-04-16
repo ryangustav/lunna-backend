@@ -29,6 +29,11 @@ const authPlugin = fp(async (fastify: FastifyInstance, options: AuthOptions) => 
    
       const hasPatternMatch = skipRoutes.some(route => {
   
+        if (route.endsWith('*')) {
+          const prefix = route.slice(0, -1);
+          return pathWithoutQuery.startsWith(prefix);
+        }
+
         if (route.includes(':')) {
           const routeParts = route.split('/').filter(Boolean);
           const pathParts = pathWithoutQuery.split('/').filter(Boolean);

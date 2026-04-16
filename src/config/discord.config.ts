@@ -1,8 +1,4 @@
 import path from 'path';
-import dotenv from 'dotenv';
-
-dotenv.config();
-
 
 export const discordConfig = {
   clientId: process.env.DISCORD_CLIENT_ID!,

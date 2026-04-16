@@ -672,18 +672,3 @@ may consider it more useful to permit linking proprietary applications with
 the library.  If this is what you want to do, use the GNU Lesser General
 Public License instead of this License.  But first, please read
 <https://www.gnu.org/licenses/why-not-lgpl.html>.
-
-Additional Restrictions (Lunna Public License Addendum):
-
-This software is provided under the GNU General Public License version 3 (GPLv3), with the following additional restriction:
-
-YOU MAY NOT USE THIS SOFTWARE FOR COMMERCIAL PURPOSES.
-
-Commercial purposes include, but are not limited to:
-- Selling or licensing the software or modified versions
-- Using it to provide paid services or in revenue-generating products
-- Including it in any project intended for commercial gain
-
-Any derivative works must also carry this same license and remain non-commercial.
-
-By using this software, you agree to these terms.

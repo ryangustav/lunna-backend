@@ -129,3 +129,28 @@ model GuildSettings {
   
   @@map("guild_settings")
 }
+
+model Item {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  rarity      String   @default("Comum")
+  category    String   @default("Equipamentos")
+  icon        String
+  stats       Json?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@map("rpg_items")
+}
+
+model UserItem {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   // Discord ID (lunarcoins user_id)
+  itemId      String   @db.ObjectId
+  equipped    Boolean  @default(false)
+  quantity    Int      @default(1)
+  acquiredAt  DateTime @default(now())
+
+  @@map("user_inventory")
+}

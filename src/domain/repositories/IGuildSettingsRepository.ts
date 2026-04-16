@@ -1,4 +1,4 @@
-import { IGuildSettings } from '../../entities/GuildSettings';
+import { IGuildSettings } from '../entities/GuildSettings';
 
 export interface IGuildSettingsRepository {
     findByGuildId(guildId: string): Promise<IGuildSettings | null>;

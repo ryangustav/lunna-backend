@@ -3,11 +3,7 @@ import { IGuildSettingsRepository } from '../../domain/repositories/IGuildSettin
 import { IGuildSettings, GuildSettings } from '../../domain/entities/GuildSettings';
 
 export class GuildSettingsRepository implements IGuildSettingsRepository {
-    private prisma: PrismaClient;
-
-    constructor() {
-        this.prisma = new PrismaClient();
-    }
+    constructor(private prisma: PrismaClient) {}
 
     async findByGuildId(guildId: string): Promise<IGuildSettings | null> {
         const result = await this.prisma.guildSettings.findUnique({
@@ -43,9 +39,9 @@ export class GuildSettingsRepository implements IGuildSettingsRepository {
             mod_log_channel: data.mod_log_channel,
             welcome_channel: data.welcome_channel,
             quarantine_role: data.quarantine_role,
-            anti_spam: (data.anti_spam as Prisma.InputJsonValue) ?? antiSpamDefaults,
-            anti_invite: (data.anti_invite as Prisma.InputJsonValue) ?? antiInviteDefaults,
-            anti_link: (data.anti_link as Prisma.InputJsonValue) ?? antiLinkDefaults
+            anti_spam: (data.anti_spam as unknown as Prisma.InputJsonValue) ?? antiSpamDefaults,
+            anti_invite: (data.anti_invite as unknown as Prisma.InputJsonValue) ?? antiInviteDefaults,
+            anti_link: (data.anti_link as unknown as Prisma.InputJsonValue) ?? antiLinkDefaults
         };
 
         const updateData: any = {
@@ -54,9 +50,9 @@ export class GuildSettingsRepository implements IGuildSettingsRepository {
             ...(data.mod_log_channel !== undefined && { mod_log_channel: data.mod_log_channel }),
             ...(data.welcome_channel !== undefined && { welcome_channel: data.welcome_channel }),
             ...(data.quarantine_role !== undefined && { quarantine_role: data.quarantine_role }),
-            ...(data.anti_spam !== undefined && { anti_spam: data.anti_spam as Prisma.InputJsonValue }),
-            ...(data.anti_invite !== undefined && { anti_invite: data.anti_invite as Prisma.InputJsonValue }),
-            ...(data.anti_link !== undefined && { anti_link: data.anti_link as Prisma.InputJsonValue })
+            ...(data.anti_spam !== undefined && { anti_spam: data.anti_spam as unknown as Prisma.InputJsonValue }),
+            ...(data.anti_invite !== undefined && { anti_invite: data.anti_invite as unknown as Prisma.InputJsonValue }),
+            ...(data.anti_link !== undefined && { anti_link: data.anti_link as unknown as Prisma.InputJsonValue })
         };
 
         const result = await this.prisma.guildSettings.upsert({

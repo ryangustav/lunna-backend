@@ -2,6 +2,8 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { fetch } from 'undici';
 import * as jwt from 'jsonwebtoken';
 import { discordConfig } from '../../config/discord.config';
+import { PrismaAuthRepository } from '../repositories/PrismaAuthRepository';
+import { GuildSettingsRepository } from '../repositories/GuildSettingsRepository';
 
 interface DiscordUser {
   id: string;
@@ -31,6 +33,14 @@ interface AuthOptions {
   skipRoutes?: string[];
 }
 
+interface DiscordGuild {
+  id: string;
+  name: string;
+  icon: string | null;
+  owner: boolean;
+  permissions: string;
+  features: string[];
+}
 
 export async function authMiddleware(
   request: FastifyRequest,
@@ -38,7 +48,6 @@ export async function authMiddleware(
   options: AuthOptions
 ) {
   const { secret, skipRoutes = [ '/auth/discord', '/auth/discord/callback', '/auth/logout' ] } = options;
-
 
   if (request.method === 'OPTIONS') {
     return;
@@ -70,7 +79,6 @@ export async function authMiddleware(
   }
 }
 
-
 export function registerAuthMiddleware(
   fastify: FastifyInstance,
   options: { secret: string; routePrefix?: string; skipRoutes?: string[] }
@@ -84,17 +92,22 @@ export function registerAuthMiddleware(
   });
 }
 
-
-
 export class DiscordOAuthController {
   private readonly JWT_SECRET: string;
   private readonly JWT_EXPIRATION: string;
   private readonly FRONTEND_URL: string;
 
-  constructor() {
+  constructor(
+    private authRepository: PrismaAuthRepository,
+    private guildSettingsRepository: GuildSettingsRepository
+  ) {
     this.JWT_SECRET = process.env.JWT_SECRET || 'your-jwt-secret-key';
     this.JWT_EXPIRATION = process.env.JWT_EXPIRATION || '1d';
-    this.FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+    // Garantir que a URL não tenha barra no final para evitar URLS como //?token=
+    const rawFrontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    this.FRONTEND_URL = rawFrontendUrl.endsWith('/') ? rawFrontendUrl.slice(0, -1) : rawFrontendUrl;
+    
+    console.log(`[Config] Frontend URL set to: ${this.FRONTEND_URL}`);
   }
 
   public registerRoutes(fastify: FastifyInstance): void {
@@ -102,15 +115,15 @@ export class DiscordOAuthController {
     fastify.get('/auth/discord', this.redirectToDiscord.bind(this));
     fastify.get('/auth/discord/callback', this.handleCallback.bind(this));
     fastify.get('/auth/me', this.getCurrentUser.bind(this));
+    fastify.get('/auth/guilds', this.getUserGuilds.bind(this));
     fastify.get('/auth/logout', this.logout.bind(this));
   }
 
- async handleTopGGWebhook(request: FastifyRequest, reply: FastifyReply): Promise<void> {
+  async handleTopGGWebhook(request: FastifyRequest, reply: FastifyReply): Promise<void> {
     const { message } = request.body as { message: string };
     console.log(message);
     reply.send('OK');
   }
-
 
   async helloWorld(request: FastifyRequest, reply: FastifyReply): Promise<void> {
     reply.send('Hello, World!');
@@ -149,6 +162,15 @@ export class DiscordOAuthController {
         return reply.redirect(`${this.FRONTEND_URL}?error=user_data_failed`);
       }
 
+      // PERSISTÊNCIA: Salvando o token no MongoDB
+      await this.authRepository.saveToken(
+        userData.id,
+        tokenResponse.access_token,
+        tokenResponse.refresh_token,
+        userData.global_name,
+        userData.email
+      );
+
       const jwtPayload: AuthPayload = { 
         userId: userData.id,
         avatar: userData.avatar ? `https://cdn.discordapp.com/avatars/${userData.id}/${userData.avatar}.png` : null,
@@ -169,6 +191,61 @@ export class DiscordOAuthController {
     }
   }
 
+  async getUserGuilds(request: FastifyRequest, reply: FastifyReply): Promise<void> {
+    const user = (request as any).user as AuthPayload;
+    
+    if (!user) {
+        return reply.status(401).send({ success: false, error: 'Unauthorized' });
+    }
+
+    try {
+        const authData = await this.authRepository.getToken(user.userId);
+        
+        if (!authData) {
+            return reply.status(404).send({ success: false, error: 'User tokens not found' });
+        }
+
+        const response = await fetch('https://discord.com/api/users/@me/guilds', {
+            headers: {
+                Authorization: `Bearer ${authData.accessToken}`
+            }
+        });
+
+        if (!response.ok) {
+            return reply.status(response.status).send({ success: false, error: 'Failed to fetch guilds from Discord' });
+        }
+
+        const guilds = await response.json() as DiscordGuild[];
+
+        // Filtrar servidores onde o usuário é admin ou tem permissão de gerenciar servidor
+        const manageableGuilds = guilds.filter(guild => {
+            const permissions = BigInt(guild.permissions);
+            const ADMINISTRATOR = BigInt(0x8);
+            const MANAGE_GUILD = BigInt(0x20);
+            return (permissions & ADMINISTRATOR) === ADMINISTRATOR || (permissions & MANAGE_GUILD) === MANAGE_GUILD;
+        });
+
+        // Verificar se o bot já está em cada servidor
+        const enrichedGuilds = await Promise.all(manageableGuilds.map(async (guild) => {
+            const settings = await this.guildSettingsRepository.findByGuildId(guild.id);
+            return {
+                id: guild.id,
+                name: guild.name,
+                icon: guild.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png` : null,
+                isBotIn: !!settings
+            };
+        }));
+
+        reply.send({
+            success: true,
+            data: enrichedGuilds
+        });
+
+    } catch (error) {
+        request.log.error(error, 'Error fetching user guilds');
+        reply.status(500).send({ success: false, error: 'Internal Server Error' });
+    }
+  }
 
   async getCurrentUser(request: FastifyRequest, reply: FastifyReply): Promise<void> {
     const req = request as any;
@@ -209,9 +286,6 @@ export class DiscordOAuthController {
     });
   }
 
-  
-  
- 
   private async fetchDiscordUserFromToken(userId: string): Promise<DiscordUser | null> {
     try {
       const response = await fetch(`https://discord.com/api/users/${userId}`, {
@@ -231,8 +305,6 @@ export class DiscordOAuthController {
       return null;
     }
   }
-  
-
 
   async logout(request: FastifyRequest, reply: FastifyReply): Promise<void> {
     reply.send({
@@ -249,6 +321,8 @@ export class DiscordOAuthController {
       params.append('grant_type', 'authorization_code');
       params.append('code', code);
       params.append('redirect_uri', discordConfig.redirectUri);
+      
+      console.log(`[OAuth] Exchanging code with redirect_uri: ${discordConfig.redirectUri}`);
       
       const response = await fetch('https://discord.com/api/oauth2/token', {
         method: 'POST',
@@ -271,9 +345,7 @@ export class DiscordOAuthController {
     }
   }
 
-
   private async fetchDiscordUser(accessToken: string): Promise<DiscordUser | null> {
-  console.log(accessToken)
     try {
       const response = await fetch('https://discord.com/api/users/@me', {
         headers: {
@@ -296,20 +368,5 @@ export class DiscordOAuthController {
 }
 
 export function setupDiscordAuth(fastify: FastifyInstance): void {
-
-  const discordController = new DiscordOAuthController();
-  
-
-  registerAuthMiddleware(fastify, {
-    secret: process.env.JWT_SECRET || 'your-jwt-secret-key',
-    skipRoutes: [
-      '/',
-      '/auth/discord', 
-      '/auth/discord/callback', 
-      '/auth/logout'
-    ]
-  });
-  
-  
-  discordController.registerRoutes(fastify);
+  // Manual setup not recommended here as we use DI in main.ts
 }
