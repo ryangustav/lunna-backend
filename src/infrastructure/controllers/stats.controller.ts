@@ -22,7 +22,7 @@ export class StatsController {
   }
 
   private async fetchDiscordStats(): Promise<{ totalServers: number; totalMembers: number; success: boolean }> {
-    const token = process.env.DISCORD_API_TOKEN || process.env.DISCORD_BOT_TOKEN;
+    const token = process.env.DISCORD_BOT_TOKEN || process.env.DISCORD_API_TOKEN;
     if (!token) {
       console.error('[StatsController] Nenhum token do Discord foi encontrado nas variáveis de ambiente.');
       return { totalServers: 0, totalMembers: 0, success: false };
