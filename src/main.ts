@@ -42,6 +42,7 @@ import { PrismaRPGRepository } from './infrastructure/repositories/prisma-rpg.re
 import { RPGController } from './infrastructure/controllers/rpg.controller';
 import { CommandsController } from './infrastructure/controllers/commands.controller';
 import { StatsController } from './infrastructure/controllers/stats.controller';
+import { CoinsController } from './infrastructure/controllers/coins.controller';
 
 
 
@@ -212,6 +213,7 @@ async function createServer(): Promise<FastifyInstance> {
   const rpgController = new RPGController(rpgRepository);
   const commandsController = new CommandsController();
   const statsController = new StatsController(prisma);
+  const coinsController = new CoinsController(paymentGateway, transactionRepository);
 
 
   // Grouping ALL routes under /v1
@@ -225,6 +227,7 @@ async function createServer(): Promise<FastifyInstance> {
     rpgController.registerRoutes(v1);
     commandsController.registerRoutes(v1);
     statsController.registerRoutes(v1);
+    coinsController.registerRoutes(v1);
     setupVoteModule(process.env.TOP_GG!, process.env.WEBHOOK_VOTE!).voteController.registerRoutes(v1);
   }, { prefix: '/v1' });
 

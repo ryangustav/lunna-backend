@@ -307,6 +307,22 @@ async successTransaction(request: FastifyRequest, reply: FastifyReply): Promise<
           request.log.error({ error }, 'Error activating VIP after payment');
           // Não falhar o webhook se a ativação do VIP falhar
         }
+      } else if (newStatus === PaymentStatus.COMPLETED && transaction.type === 'COINS') {
+        try {
+          // Buscar amount em metadados da sessão Stripe
+          const session = await this.paymentGateway.retrieveCheckoutSession(paymentId);
+          const coinsAmountStr = session?.metadata?.coinsAmount;
+          
+          if (coinsAmountStr) {
+            const coinsAmount = parseInt(coinsAmountStr, 10);
+            if (!isNaN(coinsAmount) && coinsAmount > 0) {
+              // Crédito das moedas
+              await this.prismaVipRepository.addCoinsToUser(transaction.user_id || (transaction as any).userId, coinsAmount);
+            }
+          }
+        } catch (error) {
+          request.log.error({ error }, 'Error adding COINS after payment');
+        }
       }
 
       reply.send({ received: true });
@@ -452,6 +468,43 @@ async successTransaction(request: FastifyRequest, reply: FastifyReply): Promise<
           }
         } catch (error) {
           request.log.error({ error }, 'Error fetching VIP details for success page');
+        }
+      } else if (transaction.type === 'COINS') {
+        try {
+          const session = await this.paymentGateway.retrieveCheckoutSession(sessionId);
+          const coinsAmountStr = session?.metadata?.coinsAmount;
+          const coinsAmount = coinsAmountStr ? parseInt(coinsAmountStr, 10) : 0;
+          
+          const vipUser = await this.prismaVipRepository.findUserVip(transaction.userId || (transaction as any).user_id);
+          
+          reply.send({
+            success: true,
+            data: {
+              sessionId: sessionId,
+              transaction: {
+                id: transaction.id,
+                amount: transaction.amount,
+                status: transaction.status,
+                createdAt: transaction.createdAt,
+                type: transaction.type
+              },
+              userVip: vipUser ? {
+                totalCoins: vipUser.coins
+              } : null,
+              benefits: {
+                coinsReceived: coinsAmount,
+                description: `Você recebeu ${coinsAmount} Lunar Coins!`
+              },
+              message: `🎉 Pagamento aprovado! Suas ${coinsAmount} moedas foram recebidas.`,
+              nextSteps: [
+                `Verifique seu saldo atualizado no bot`,
+                `Você recebeu ${coinsAmount} moedas!`
+              ]
+            }
+          });
+          return;
+        } catch (error) {
+          request.log.error({ error }, 'Error fetching COINS details for success page');
         }
       }
 
@@ -601,6 +654,43 @@ async successTransaction(request: FastifyRequest, reply: FastifyReply): Promise<
           }
         } catch (error) {
           request.log.error({ error }, 'Error fetching VIP details for success page');
+        }
+      } else if (transaction.type === 'COINS') {
+        try {
+          const session = await this.paymentGateway.retrieveCheckoutSession(sessionId);
+          const coinsAmountStr = session?.metadata?.coinsAmount;
+          const coinsAmount = coinsAmountStr ? parseInt(coinsAmountStr, 10) : 0;
+          
+          const vipUser = await this.prismaVipRepository.findUserVip(transaction.userId || (transaction as any).user_id);
+          
+          reply.send({
+            success: true,
+            data: {
+              sessionId: sessionId,
+              transaction: {
+                id: transaction.id,
+                amount: transaction.amount,
+                status: transaction.status,
+                createdAt: transaction.createdAt,
+                type: transaction.type
+              },
+              userVip: vipUser ? {
+                totalCoins: vipUser.coins
+              } : null,
+              benefits: {
+                coinsReceived: coinsAmount,
+                description: `Você recebeu ${coinsAmount} Lunar Coins!`
+              },
+              message: `🎉 Pagamento aprovado! Suas ${coinsAmount} moedas foram recebidas.`,
+              nextSteps: [
+                `Verifique seu saldo atualizado no bot`,
+                `Você recebeu ${coinsAmount} moedas!`
+              ]
+            }
+          });
+          return;
+        } catch (error) {
+          request.log.error({ error }, 'Error fetching COINS details for success page');
         }
       }
 

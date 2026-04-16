@@ -56,13 +56,27 @@ export class PrismaVipRepository implements VipRepository {
 
     async updateUserVip(userId: string, tier: VipTier, expiryTimestamp: number): Promise<void> {
       await this.prisma.lunarCoins.update({
-        where: { id: userId },
+        where: { user_id: userId },
         data: {
           isVip: true,
           vip_type: tier.name,
           vip_timestamp: expiryTimestamp,
           coins: {
             increment: tier.coins
+          }
+        }
+      });
+    }
+
+    /**
+     * Add coins directly to a user's balance
+     */
+    async addCoinsToUser(userId: string, amount: number): Promise<void> {
+      await this.prisma.lunarCoins.update({
+        where: { user_id: userId },
+        data: {
+          coins: {
+            increment: amount
           }
         }
       });
