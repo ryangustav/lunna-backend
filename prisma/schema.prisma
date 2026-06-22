@@ -30,9 +30,27 @@ model LunarCoins {
   aboutme     String?     @default("Apenas um viajante estelar explorando o cosmos da Lunna.")
   background_id String?   @default("default")
   base_color  String?     @default("#1F2833")
-  insignias   String[]    @default([])
+  insignias   String[]    @default([]) // Legacy field
+  
+  // Cosmetic Engine Fields
+  equipped_frame_id  String?   @db.ObjectId
+  equipped_badge_id  String?   @db.ObjectId
+  cosmetic_inventory String[]  @default([]) // Array of Cosmetic IDs
 
   @@map("lunarcoins") 
+}
+
+model Cosmetic {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  type        String   // FRAME, BADGE, BACKGROUND, OVERLAY
+  rarity      String   @default("Comum")
+  asset_url   String   // Internal path or URL
+  is_animated Boolean  @default(false)
+  metadata    Json?    // For offsets, layer data, etc.
+  createdAt   DateTime @default(now())
+
+  @@map("cosmetics")
 }
 
 model Transaction {
@@ -56,6 +74,7 @@ enum TransactionType {
   COINS
   SUBSCRIPTION
 }
+
 model VipTier {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   name        String   @unique 
@@ -63,6 +82,11 @@ model VipTier {
   duration    Int      
   coins       Int     
   benefits    String[]
+  
+  // Associated Rewards
+  frame_id    String?  @db.ObjectId
+  badge_id    String?  @db.ObjectId
+  daily_bonus Float    @default(0) // Percentage multiplier (e.g., 0.15 for 15%)
 
   @@map("store_vip_tiers")
 }
@@ -153,4 +177,21 @@ model UserItem {
   acquiredAt  DateTime @default(now())
 
   @@map("user_inventory")
+}
+
+model DailyCollect {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  user_id         String   @unique
+  daily_collected Boolean  @default(false)
+
+  @@map("dailycollects")
+}
+
+model BotTransaction {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  user_id          String   @unique
+  transactions     Json     // Stores array of { id, timestamp, mensagem }
+  transactions_ids Json     // Stores array of transaction IDs (can be strings or numbers historically)
+
+  @@map("transactions")
 }

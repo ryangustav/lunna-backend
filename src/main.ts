@@ -43,6 +43,7 @@ import { RPGController } from './infrastructure/controllers/rpg.controller';
 import { CommandsController } from './infrastructure/controllers/commands.controller';
 import { StatsController } from './infrastructure/controllers/stats.controller';
 import { CoinsController } from './infrastructure/controllers/coins.controller';
+import { DailyController } from './infrastructure/controllers/daily.controller';
 
 
 
@@ -214,6 +215,7 @@ async function createServer(): Promise<FastifyInstance> {
   const commandsController = new CommandsController();
   const statsController = new StatsController(prisma);
   const coinsController = new CoinsController(paymentGateway, transactionRepository);
+  const dailyController = new DailyController(prisma);
 
 
   // Grouping ALL routes under /v1
@@ -228,6 +230,7 @@ async function createServer(): Promise<FastifyInstance> {
     commandsController.registerRoutes(v1);
     statsController.registerRoutes(v1);
     coinsController.registerRoutes(v1);
+    dailyController.registerRoutes(v1);
     setupVoteModule(process.env.TOP_GG!, process.env.WEBHOOK_VOTE!).voteController.registerRoutes(v1);
   }, { prefix: '/v1' });
 

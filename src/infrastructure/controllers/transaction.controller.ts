@@ -317,7 +317,7 @@ async successTransaction(request: FastifyRequest, reply: FastifyReply): Promise<
             const coinsAmount = parseInt(coinsAmountStr, 10);
             if (!isNaN(coinsAmount) && coinsAmount > 0) {
               // Crédito das moedas
-              await this.prismaVipRepository.addCoinsToUser(transaction.user_id || (transaction as any).userId, coinsAmount);
+              await this.prismaVipRepository.addCoinsToUser(transaction.user_id, coinsAmount);
             }
           }
         } catch (error) {
@@ -475,7 +475,7 @@ async successTransaction(request: FastifyRequest, reply: FastifyReply): Promise<
           const coinsAmountStr = session?.metadata?.coinsAmount;
           const coinsAmount = coinsAmountStr ? parseInt(coinsAmountStr, 10) : 0;
           
-          const vipUser = await this.prismaVipRepository.findUserVip(transaction.userId || (transaction as any).user_id);
+          const vipUser = await this.prismaVipRepository.findUserVip(transaction.user_id);
           
           reply.send({
             success: true,
@@ -661,7 +661,7 @@ async successTransaction(request: FastifyRequest, reply: FastifyReply): Promise<
           const coinsAmountStr = session?.metadata?.coinsAmount;
           const coinsAmount = coinsAmountStr ? parseInt(coinsAmountStr, 10) : 0;
           
-          const vipUser = await this.prismaVipRepository.findUserVip(transaction.userId || (transaction as any).user_id);
+          const vipUser = await this.prismaVipRepository.findUserVip(transaction.user_id);
           
           reply.send({
             success: true,

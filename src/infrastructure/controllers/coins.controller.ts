@@ -58,10 +58,10 @@ export class CoinsController {
         amount: coinPackage.price,
         productName: `${coinPackage.amount.toLocaleString()} Lunnar Coins + Bonus`,
         description: `Purchase of ${totalCoinsToReceive.toLocaleString()} total Lunar Coins`,
-        type: TransactionType.COINS,
+        type: 'COINS',
         metadata: {
           userId,
-          type: TransactionType.COINS,
+          type: 'COINS',
           packageId: coinPackage.id,
           coinsAmount: totalCoinsToReceive.toString()
         }
@@ -70,7 +70,7 @@ export class CoinsController {
       // Create a pending transaction
       await this.transactionRepository.create({
         user_id: userId,
-        type: TransactionType.COINS,
+        type: 'COINS',
         amount: coinPackage.price,
         paymentId: paymentSession.id,
         status: PaymentStatus.PENDING

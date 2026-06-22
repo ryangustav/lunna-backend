@@ -55,16 +55,41 @@ export class PrismaVipRepository implements VipRepository {
      */
 
     async updateUserVip(userId: string, tier: VipTier, expiryTimestamp: number): Promise<void> {
+      // Prepare cosmetics update
+      const updateData: any = {
+        isVip: true,
+        vip_type: tier.name,
+        vip_timestamp: expiryTimestamp,
+        coins: {
+          increment: tier.coins
+        }
+      };
+
+      if (tier.frame_id) {
+        updateData.equipped_frame_id = tier.frame_id;
+        updateData.cosmetic_inventory = {
+          push: tier.frame_id
+        };
+      }
+
+      if (tier.badge_id) {
+        updateData.equipped_badge_id = tier.badge_id;
+        // If we push twice, we might have duplicates. 
+        // In MongoDB with Prisma, push appends. 
+        // For simplicity in this sync phase, we'll push. 
+        // A more robust check for duplicates can be added later.
+        if (updateData.cosmetic_inventory) {
+          updateData.cosmetic_inventory.push = [tier.frame_id, tier.badge_id].filter(id => id);
+        } else {
+          updateData.cosmetic_inventory = {
+            push: tier.badge_id
+          };
+        }
+      }
+
       await this.prisma.lunarCoins.update({
         where: { user_id: userId },
-        data: {
-          isVip: true,
-          vip_type: tier.name,
-          vip_timestamp: expiryTimestamp,
-          coins: {
-            increment: tier.coins
-          }
-        }
+        data: updateData
       });
     }
 
